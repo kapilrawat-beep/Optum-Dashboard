@@ -1,1 +1,873 @@
-https://optum-dashboard-nine.vercel.app/
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Optum · Sprint 52</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#0f0f13;color:#e2e8f0;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-track{background:#1a1a2e}::-webkit-scrollbar-thumb{background:#FF5A00;border-radius:3px}
+.glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08)}
+.card{background:#1a1a26;border:1px solid rgba(255,255,255,0.07);border-radius:14px}
+input,select{background:#1a1a26;border:1px solid rgba(255,255,255,0.1);color:#e2e8f0;border-radius:8px;padding:8px 12px;font-size:13px;outline:none;font-family:inherit}
+input::placeholder{color:#475569}
+input:focus,select:focus{border-color:#FF5A00}
+select option{background:#1a1a26}
+a{text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeIn .25s ease}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useMemo,useRef,useEffect}=React;
+const TODAY=new Date("2026-04-09");
+const SPRINT_START=new Date("2026-04-01");
+
+const DEVS=["Alexander Hoover","Cici Woolf","Brendan Murphy","Mallikarjun Saravandi","Cam Neely","Rohit Jaiswal","John Hull","Sameer Kumar"];
+const REVIEWER_MAP={
+  "Alexander Hoover":"Brendan Murphy","Brendan Murphy":"Alexander Hoover",
+  "Cici Woolf":"Cam Neely","Cam Neely":"Cici Woolf",
+  "John Hull":"Mallikarjun Saravandi","Mallikarjun Saravandi":"John Hull",
+  "Rohit Jaiswal":"Sameer Kumar","Sameer Kumar":"Rohit Jaiswal",
+};
+const SP_MAP={
+  "OP-11625":2,"OP-11624":3,"OP-11623":2,"OP-11620":3,"OP-11618":5,
+  "OP-11617":5,"OP-11615":3,"OP-11614":3,"OP-11613":3,"OP-11612":2,
+  "OP-11611":2,"OP-11610":3,"OP-11609":2,"OP-11608":3,"OP-11607":5,
+  "OP-11605":2,"OP-11602":5,"OP-11601":2,"OP-11600":2,"OP-11599":3,
+  "OP-11598":3,"OP-11597":3,"OP-11596":3,"OP-11585":5,"OP-11582":3,
+  "OP-11579":3,"OP-11576":2,"OP-11573":3,"OP-11572":3,"OP-11564":2,
+  "OP-11563":2,"OP-11562":2,"OP-11561":1,"OP-11560":5,"OP-11559":3,
+  "OP-11558":8,"OP-11557":5,"OP-11556":3,"OP-11554":3,"OP-11553":3,
+  "OP-11549":5,"OP-11548":3,"OP-11547":2,"OP-11543":2,"OP-11539":2,
+  "OP-11530":1,"OP-11529":2,"OP-11526":3,"OP-11525":3,"OP-11524":3,
+  "OP-11522":3,"OP-11515":3,"OP-11514":2,"OP-11499":5,"OP-11498":5,
+  "OP-11496":5,"OP-11486":1,"OP-11478":3,"OP-11475":5,"OP-11470":2,
+  "OP-11435":2,"OP-11428":2,"OP-11414":5,"OP-11411":5,"OP-11405":2,
+  "OP-11404":2,"OP-11403":2,"OP-11401":2,"OP-11398":5,"OP-11397":5,
+  "OP-11394":2,"OP-11393":2,"OP-11392":1,"OP-11391":3,"OP-11389":3,
+  "OP-11370":3,"OP-11363":8,"OP-11362":3,"OP-11347":3,"OP-11338":3,
+  "OP-11320":5,"OP-11304":2,"OP-11294":2,"OP-11290":3,"OP-11289":3,
+  "OP-11286":2,"OP-11285":2,"OP-11272":3,"OP-11269":3,"OP-11218":3,
+  "OP-11199":2,"OP-11158":3,"OP-11154":5,"OP-11077":2,"OP-11040":3,
+  "OP-10996":5,"OP-10940":8,"OP-10773":3,"OP-10758":2,"OP-10752":2,"OP-10669":5,
+};
+const ASSIGN_DATE={
+  "OP-11625":"2026-04-08","OP-11624":"2026-04-07","OP-11623":"2026-04-07","OP-11620":"2026-04-06",
+  "OP-11618":"2026-04-06","OP-11617":"2026-04-06","OP-11615":"2026-04-03","OP-11614":"2026-04-02",
+  "OP-11613":"2026-04-02","OP-11612":"2026-04-01","OP-11611":"2026-04-01","OP-11610":"2026-04-01",
+  "OP-11609":"2026-04-01","OP-11608":"2026-04-01","OP-11607":"2026-04-01","OP-11605":"2026-04-01",
+  "OP-11602":"2026-04-01","OP-11601":"2026-04-01","OP-11600":"2026-04-01","OP-11599":"2026-04-01",
+  "OP-11598":"2026-04-01","OP-11597":"2026-04-01","OP-11596":"2026-04-01","OP-11585":"2026-04-01",
+  "OP-11582":"2026-04-01","OP-11579":"2026-04-01","OP-11576":"2026-04-01","OP-11573":"2026-04-01",
+  "OP-11572":"2026-04-01","OP-11564":"2026-04-01","OP-11563":"2026-04-01","OP-11562":"2026-04-01",
+  "OP-11561":"2026-04-01","OP-11560":"2026-04-01","OP-11559":"2026-04-01","OP-11558":"2026-03-23",
+  "OP-11557":"2026-03-23","OP-11556":"2026-03-23","OP-11554":"2026-03-21","OP-11553":"2026-03-21",
+  "OP-11549":"2026-03-20","OP-11548":"2026-03-20","OP-11547":"2026-03-20","OP-11543":"2026-03-19",
+  "OP-11539":"2026-03-19","OP-11530":"2026-03-17","OP-11529":"2026-03-17","OP-11526":"2026-03-17",
+  "OP-11525":"2026-03-17","OP-11524":"2026-03-17","OP-11522":"2026-03-14","OP-11515":"2026-03-12",
+  "OP-11514":"2026-03-12","OP-11499":"2026-03-10","OP-11498":"2026-03-10","OP-11496":"2026-03-10",
+};
+
+const ISSUES=[
+  {key:"OP-11625",summary:"Cleanup My Gift cards images",assignee:"Cam Neely",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-08",regression:false},
+  {key:"OP-11624",summary:"Expiring gift card warning not displaying after activity runout ends",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"Dev Done",created:"2026-04-07",regression:false},
+  {key:"OP-11623",summary:"FE: Android: Regression: Rewards Text",assignee:"Sameer Kumar",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-04-07",regression:true},
+  {key:"OP-11620",summary:"Deploy Sanity schema to non-production datasets",assignee:"Alexander Hoover",type:"Task",priority:"Medium-P2",status:"To Do",created:"2026-04-06",regression:false},
+  {key:"OP-11618",summary:"Save and Proceed not navigating to mission selection",assignee:"Marcy Clothier",type:"Story",priority:"High-P1",status:"QA Done",created:"2026-04-06",regression:false},
+  {key:"OP-11617",summary:"Mission progress not persisting after check-in",assignee:"Alexander Hoover",type:"Story",priority:"High-P1",status:"In Progress",created:"2026-04-06",regression:false},
+  {key:"OP-11615",summary:"Onboarding: Logos Not right",assignee:"Sameer Kumar",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-04-03",regression:false},
+  {key:"OP-11614",summary:"Missions not functioning - unable to learn more or join",assignee:"Marcy Clothier",type:"Bug",priority:"High-P1",status:"QA Done",created:"2026-04-02",regression:false},
+  {key:"OP-11613",summary:"FE: Move language in footer near app store buttons",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"To Do",created:"2026-04-02",regression:false},
+  {key:"OP-11612",summary:"create intouch config for chase in 1126, merge and prod env",assignee:"Rohit Jaiswal",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-01",regression:false},
+  {key:"OP-11611",summary:"create intouch config for bcbs in 1126, merge and prod env",assignee:"Rohit Jaiswal",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-01",regression:false},
+  {key:"OP-11610",summary:"Team Challenges: Back arrow not working and leaderboard displaying avg not sum",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-04-01",regression:false},
+  {key:"OP-11609",summary:"Web: Homepage shifting",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-03-31",regression:false},
+  {key:"OP-11608",summary:"Mobile: Homepage layout jank / shifting",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-03-31",regression:false},
+  {key:"OP-11607",summary:"FS: Add View My Access Code CTA on gift card redemption screen",assignee:"Cam Neely",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-03-28",regression:false},
+  {key:"OP-11605",summary:"Android: Mobile web: Offers not scrollable",assignee:"John Hull",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-27",regression:false},
+  {key:"OP-11602",summary:"FS: Explore Page: Cannot find Mission Banner/Hyperlink",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"Blocked",created:"2026-03-27",regression:false},
+  {key:"OP-11601",summary:"FE: Wrong stride join date",assignee:"Marcy Clothier",type:"Bug",priority:"High-P1",status:"QA Done",created:"2026-03-26",regression:false},
+  {key:"OP-11600",summary:"Help Center: Window Sizing Iframe Issue",assignee:"Marcy Clothier",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-26",regression:false},
+  {key:"OP-11599",summary:"Hide loading state when data already present - explore page",assignee:"Marcy Clothier",type:"Story",priority:"Medium-P2",status:"QA Done",created:"2026-03-26",regression:false},
+  {key:"OP-11598",summary:"Web: Exposure of Internal Domain Information in HTTP Response",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false},
+  {key:"OP-11597",summary:"Web: Information Disclosure via Publicly Accessible Environment File",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false},
+  {key:"OP-11596",summary:"Web: WAF Bypass via Encoding Allows Access to Protected Endpoints",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false},
+  {key:"OP-11585",summary:"Improve LCP on Home Page with Hero Banner/Spotlight Items",assignee:"Rashmi BR",type:"Story",priority:"Medium-P2",status:"In QA",created:"2026-03-25",regression:false},
+  {key:"OP-11582",summary:"Web: Internal Server Information Disclosure via S3 Error Page",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-25",regression:false},
+  {key:"OP-11579",summary:"Web: Improper Input Validation Allows Null Byte Injection",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-25",regression:false},
+  {key:"OP-11576",summary:"Clean CardComponent to make it new standard",assignee:"Marcy Clothier",type:"Sub-task",priority:"Medium-P2",status:"QA Done",created:"2026-03-25",regression:false},
+  {key:"OP-11573",summary:"Mobile: OIDC Session Cookie SameSite Attribute Misconfiguration",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-24",regression:false},
+  {key:"OP-11572",summary:"Mobile: Improper Input Validation Allows Null Byte Injection",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-24",regression:false},
+  {key:"OP-11564",summary:"Consolidate and organize rewards cards",assignee:"Marcy Clothier",type:"Sub-task",priority:"Medium-P2",status:"QA Done",created:"2026-03-24",regression:false},
+  {key:"OP-11563",summary:"Unify Buttons to single base component",assignee:"Marcy Clothier",type:"Sub-task",priority:"Medium-P2",status:"QA Done",created:"2026-03-24",regression:false},
+  {key:"OP-11562",summary:"Unify Cards to single base component",assignee:"Marcy Clothier",type:"Sub-task",priority:"Medium-P2",status:"QA Done",created:"2026-03-24",regression:false},
+  {key:"OP-11561",summary:"Unify Dividers to single component",assignee:"Marcy Clothier",type:"Sub-task",priority:"Medium-P2",status:"QA Done",created:"2026-03-24",regression:false},
+  {key:"OP-11560",summary:"INC49089194: Application is behaving poorly on Android S24",assignee:"John Hull",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-03-24",regression:false},
+  {key:"OP-11559",summary:"Prod - Missions showing complete but no associated completion",assignee:"Rashmi BR",type:"Bug",priority:"High-P1",status:"Ready For QA",created:"2026-03-24",regression:false},
+  {key:"OP-11558",summary:"user unable to do Stride Enrollment 2026 - Prod",assignee:"Paul Kelley",type:"Bug",priority:"Highest-P0",status:"Done",created:"2026-03-23",regression:false},
+  {key:"OP-11557",summary:"BE: Highest bidder in Auction has reward in Outbid status",assignee:"Alexander Hoover",type:"Bug",priority:"High-P1",status:"Dev Done",created:"2026-03-23",regression:false},
+  {key:"OP-11556",summary:"Giftcard Balances - Followup",assignee:"Cici Woolf",type:"Story",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-23",regression:false},
+  {key:"OP-11554",summary:"BE: New Stage Only: Missions: Progress not persisting",assignee:"Alexander Hoover",type:"Bug",priority:"High-P1",status:"Defer",created:"2026-03-21",regression:true},
+  {key:"OP-11553",summary:"FS: Missions/challenges Rounding Problems",assignee:"Cam Neely",type:"Bug",priority:"Medium-P2",status:"Dev Done",created:"2026-03-21",regression:true},
+  {key:"OP-11549",summary:"Missions allowing user to quit and re-enroll and gain points multiple times",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"Blocked",created:"2026-03-20",regression:false},
+  {key:"OP-11548",summary:"AI storybook Project",assignee:"Marcy Clothier",type:"Task",priority:"Medium-P2",status:"QA Done",created:"2026-03-20",regression:false},
+  {key:"OP-11547",summary:"Mobile: Bottom Tool bar, change to blue",assignee:"Cici Woolf",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-03-20",regression:false},
+  {key:"OP-11543",summary:"B2B apis: Activity completion date",assignee:"Rashmi BR",type:"Bug",priority:"Medium-P2",status:"Done",created:"2026-03-19",regression:false},
+  {key:"OP-11539",summary:"Mobile Web: IOS: Regression - white space between nav bar and tabs on Explore page",assignee:"Sameer Kumar",type:"Bug",priority:"Medium-P2",status:"Defer",created:"2026-03-19",regression:true},
+  {key:"OP-11530",summary:"Web: Make toast message Centered on Screen",assignee:"Marcy Clothier",type:"Story",priority:"Low-P3",status:"QA Done",created:"2026-03-17",regression:false},
+  {key:"OP-11529",summary:"Pt 2: Cards and Dividers - Increase Border and Separator Contrast",assignee:"Sameer Kumar",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-03-17",regression:false},
+  {key:"OP-11526",summary:"FS: Add experation flag to Top Pics",assignee:"Sameer Kumar",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-03-17",regression:false},
+  {key:"OP-11525",summary:"Neo: Member status is updated to ACTIVE when in suspended status",assignee:"Cici Woolf",type:"Bug",priority:"Medium-P2",status:"In Progress",created:"2026-03-17",regression:false},
+  {key:"OP-11524",summary:"Figuring out data extract and migration stuff",assignee:"Marcy Clothier",type:"Story",priority:"Medium-P2",status:"QA Done",created:"2026-03-17",regression:false},
+  {key:"OP-11522",summary:"Sanity studio: Split challenges into Active, Past",assignee:"Ankit Rathod",type:"Story",priority:"Medium-P2",status:"QA Done",created:"2026-03-14",regression:false},
+  {key:"OP-11515",summary:"Test User Login (Phase 1)",assignee:"Cici Woolf",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-12",regression:false},
+  {key:"OP-11514",summary:"Issue in fetching details in external Activity ID - Lumen",assignee:"Ankit Rathod",type:"Task",priority:"Medium-P2",status:"QA Done",created:"2026-03-12",regression:false},
+  {key:"OP-11499",summary:"Create critical path test set for web tests",assignee:"Rashmi BR",type:"Task",priority:"Medium-P2",status:"In Progress",created:"2026-03-10",regression:false},
+  {key:"OP-11498",summary:"Create critical path test set for API tests",assignee:"Bri Stevenski",type:"Task",priority:"Medium-P2",status:"In Progress",created:"2026-03-10",regression:false},
+  {key:"OP-11496",summary:"Create and publish user shared library package",assignee:"Marcy Clothier",type:"Task",priority:"Medium-P2",status:"In Progress",created:"2026-03-10",regression:false},
+  {key:"OP-11428",summary:"Web: Gift Card Images are spilling over",assignee:"Ankit Rathod",type:"Bug",priority:"Low-P3",status:"QA Done",created:"2026-02-18",regression:true},
+  {key:"OP-11414",summary:"BE: Completed rewardable activities should display reward amount even if max cap reached",assignee:"Alexander Hoover",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-02-12",regression:false},
+  {key:"OP-11363",summary:"Redeem rewards UI refresh",assignee:"Marcy Clothier",type:"Story",priority:"High-P1",status:"In QA",created:"2026-02-03",regression:false},
+  {key:"OP-11362",summary:"Request to retrigger the Health survey 2026 responses in prod",assignee:"Brendan Murphy",type:"Task",priority:"High-P1",status:"Dev Done",created:"2026-02-03",regression:false},
+  {key:"OP-11347",summary:"FE: Add confirmation/notification for mission reset status",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"In Progress",created:"2026-01-30",regression:false},
+  {key:"OP-11338",summary:"FE: Add Entry Details to Auto enrolled sweeps in My Sweepstakes",assignee:"Rashmi BR",type:"Story",priority:"Medium-P2",status:"QA Done",created:"2026-01-27",regression:false},
+  {key:"OP-11218",summary:"Health Survey: Stale FE after completing health survey",assignee:"Alexander Hoover",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-01-06",regression:false},
+  {key:"OP-11269",summary:"Develop a solution where our FE local can use our BE Local",assignee:"Alexander Hoover",type:"Task",priority:"Medium-P2",status:"Dev Done",created:"2026-01-14",regression:false},
+  {key:"OP-11154",summary:"Shell Ticket: Health Survey Refactor Research",assignee:"Alexander Hoover",type:"Story",priority:"High-P1",status:"Dev Done",created:"2025-12-15",regression:false},
+  {key:"OP-10940",summary:"Sanity: Replace StoreLocator Service with Sanity based Gyms Flow",assignee:"Cam Neely",type:"Story",priority:"High-P1",status:"In Progress",created:"2025-11-06",regression:false},
+  {key:"OP-10758",summary:"Mobile Web: White bar while in missions",assignee:"John Hull",type:"Bug",priority:"Medium-P2",status:"In Progress",created:"2025-09-30",regression:false},
+];
+
+const STATUS_CFG={
+  "To Do":{c:"#60a5fa",bg:"rgba(96,165,250,0.15)"},
+  "In Progress":{c:"#fbbf24",bg:"rgba(251,191,36,0.15)"},
+  "Dev Done":{c:"#a78bfa",bg:"rgba(167,139,250,0.15)"},
+  "In QA":{c:"#f472b6",bg:"rgba(244,114,182,0.15)"},
+  "Ready For QA":{c:"#38bdf8",bg:"rgba(56,189,248,0.15)"},
+  "QA Done":{c:"#34d399",bg:"rgba(52,211,153,0.15)"},
+  "Blocked":{c:"#f87171",bg:"rgba(248,113,113,0.15)"},
+  "Done":{c:"#34d399",bg:"rgba(52,211,153,0.15)"},
+  "Defer":{c:"#94a3b8",bg:"rgba(148,163,184,0.15)"},
+  "Design Pending":{c:"#fbbf24",bg:"rgba(251,191,36,0.15)"},
+  "NOT REPRODUCIBLE":{c:"#94a3b8",bg:"rgba(148,163,184,0.15)"},
+  "Duplicate":{c:"#94a3b8",bg:"rgba(148,163,184,0.15)"},
+};
+const PRIO_CLR={"Highest-P0":"#c084fc","High-P1":"#f87171","Medium-P2":"#fbbf24","Low-P3":"#34d399"};
+
+const ICONS={
+  Bug:()=><svg width="14" height="14" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#ef4444"/><path d="M5.5 8l1.8 1.8L11 5.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" fill="none"/></svg>,
+  Story:()=><svg width="14" height="14" viewBox="0 0 16 16"><rect width="14" height="14" x="1" y="1" rx="3" fill="#10b981"/><path d="M4 5h8M4 8h6M4 11h4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/></svg>,
+  Task:()=><svg width="14" height="14" viewBox="0 0 16 16"><rect width="14" height="14" x="1" y="1" rx="3" fill="#3b82f6"/><path d="M5 8l2 2 4-4" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" fill="none"/></svg>,
+  "Sub-task":()=><svg width="14" height="14" viewBox="0 0 16 16"><rect width="14" height="14" x="1" y="1" rx="3" fill="#6366f1"/><path d="M4 5h4M4 8h6M4 11h3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round"/><rect x="11" y="10" width="3" height="3" rx="1" fill="#fff"/></svg>,
+};
+const TypeIcon=({type})=>{const I=ICONS[type]||ICONS.Task;return <span style={{display:"inline-flex",alignItems:"center",marginRight:5}}><I/></span>;};
+
+function daysDiff(from,to){return Math.round((to-new Date(from))/86400000);}
+function ageBadge(days){
+  if(days>14)return{bg:"rgba(248,113,113,0.15)",c:"#f87171",label:"14d+"};
+  if(days>7)return{bg:"rgba(251,191,36,0.15)",c:"#fbbf24",label:"8–14d"};
+  return{bg:"rgba(52,211,153,0.15)",c:"#34d399",label:"0–7d"};
+}
+const StatusPill=({s})=>{const cfg=STATUS_CFG[s]||{c:"#94a3b8",bg:"rgba(148,163,184,0.15)"};return<span style={{background:cfg.bg,color:cfg.c,padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:700,whiteSpace:"nowrap",border:`1px solid ${cfg.c}40`}}>{s}</span>;};
+
+// ── Ticket origin classification
+// rolled over = created before sprint start (Apr 1)
+// sprint start = created on Apr 1 exactly
+// added mid-sprint = created after Apr 1
+function getOrigin(issue){
+  const c=new Date(issue.created);
+  if(c<SPRINT_START) return "rolledOver";
+  if(c.toDateString()===SPRINT_START.toDateString()) return "sprintStart";
+  return "midSprint";
+}
+
+const MILESTONES=[
+  {date:"2026-04-01",label:"Sprint Start",color:"#34d399",icon:"🚀"},
+  {date:"2026-04-17",label:"Code Freeze",color:"#fbbf24",icon:"🧊"},
+  {date:"2026-04-20",label:"SIT Begins",color:"#60a5fa",icon:"🔬"},
+  {date:"2026-04-22",label:"SIT Ends",color:"#60a5fa",icon:"✅"},
+  {date:"2026-04-24",label:"Regression End",color:"#a78bfa",icon:"🔄"},
+  {date:"2026-04-30",label:"Release",color:"#FF5A00",icon:"🎉"},
+];
+
+const COMMITTED_SP=180;
+const DONE_STATUSES=["QA Done","Done","Defer"];
+
+// Age chart component using Chart.js
+function AgeChart({issues}){
+  const canvasRef=useRef(null);
+  const chartRef=useRef(null);
+
+  const devIssues=useMemo(()=>{
+    const m={};
+    DEVS.forEach(dev=>{
+      const tickets=issues.filter(i=>i.assignee===dev&&ASSIGN_DATE[i.key]);
+      if(tickets.length>0) m[dev]=tickets;
+    });
+    return m;
+  },[issues]);
+
+  useEffect(()=>{
+    if(!canvasRef.current) return;
+    if(chartRef.current) chartRef.current.destroy();
+
+    const devs=Object.keys(devIssues);
+    const green=[],amber=[],red=[];
+    devs.forEach(dev=>{
+      const tickets=devIssues[dev];
+      let g=0,a=0,r=0;
+      tickets.forEach(t=>{
+        const days=daysDiff(ASSIGN_DATE[t.key]||t.created,TODAY);
+        if(days>14) r++;
+        else if(days>7) a++;
+        else g++;
+      });
+      green.push(g); amber.push(a); red.push(r);
+    });
+
+    const shortNames=devs.map(d=>d.split(" ")[0]);
+
+    chartRef.current=new Chart(canvasRef.current,{
+      type:"bar",
+      data:{
+        labels:shortNames,
+        datasets:[
+          {label:"0–7d (fresh)",data:green,backgroundColor:"rgba(52,211,153,0.75)",borderColor:"rgba(52,211,153,1)",borderWidth:1},
+          {label:"8–14d (aging)",data:amber,backgroundColor:"rgba(251,191,36,0.75)",borderColor:"rgba(251,191,36,1)",borderWidth:1},
+          {label:"14d+ (stale)",data:red,backgroundColor:"rgba(248,113,113,0.75)",borderColor:"rgba(248,113,113,1)",borderWidth:1},
+        ]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            callbacks:{
+              title:([item])=>devs[item.dataIndex],
+              label:ctx=>`${ctx.dataset.label}: ${ctx.raw} ticket${ctx.raw!==1?"s":""}`,
+            }
+          }
+        },
+        scales:{
+          x:{stacked:true,ticks:{color:"rgba(226,232,240,0.6)",font:{size:11}},grid:{color:"rgba(255,255,255,0.05)"},border:{color:"rgba(255,255,255,0.05)"}},
+          y:{stacked:true,ticks:{color:"rgba(226,232,240,0.6)",font:{size:11},stepSize:1},grid:{color:"rgba(255,255,255,0.05)"},border:{color:"rgba(255,255,255,0.05)"}},
+        }
+      }
+    });
+    return()=>{if(chartRef.current)chartRef.current.destroy();};
+  },[devIssues]);
+
+  return(
+    <div className="card" style={{padding:20,marginBottom:20}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+        <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0"}}>Ticket age by developer</div>
+        <div style={{display:"flex",gap:14}}>
+          {[["#34d399","0–7d"],["#fbbf24","8–14d"],["#f87171","14d+"]].map(([c,l])=>(
+            <span key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"rgba(226,232,240,0.6)"}}>
+              <span style={{width:10,height:10,borderRadius:2,background:c,display:"inline-block"}}/>
+              {l}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div style={{position:"relative",height:220}}>
+        <canvas ref={canvasRef} role="img" aria-label="Stacked bar chart showing ticket age distribution per developer"/>
+      </div>
+    </div>
+  );
+}
+
+// Avg age per dev bar chart
+function AvgAgeChart({issues}){
+  const canvasRef=useRef(null);
+  const chartRef=useRef(null);
+
+  const data=useMemo(()=>{
+    return DEVS.map(dev=>{
+      const tickets=issues.filter(i=>i.assignee===dev&&ASSIGN_DATE[i.key]);
+      if(!tickets.length) return null;
+      const avg=Math.round(tickets.reduce((s,t)=>s+daysDiff(ASSIGN_DATE[t.key]||t.created,TODAY),0)/tickets.length);
+      return {dev,avg,short:dev.split(" ")[0]};
+    }).filter(Boolean);
+  },[issues]);
+
+  useEffect(()=>{
+    if(!canvasRef.current||!data.length) return;
+    if(chartRef.current) chartRef.current.destroy();
+    chartRef.current=new Chart(canvasRef.current,{
+      type:"bar",
+      data:{
+        labels:data.map(d=>d.short),
+        datasets:[{
+          label:"Avg age (days)",
+          data:data.map(d=>d.avg),
+          backgroundColor:data.map(d=>d.avg>14?"rgba(248,113,113,0.75)":d.avg>7?"rgba(251,191,36,0.75)":"rgba(52,211,153,0.75)"),
+          borderColor:data.map(d=>d.avg>14?"rgba(248,113,113,1)":d.avg>7?"rgba(251,191,36,1)":"rgba(52,211,153,1)"),
+          borderWidth:1,borderRadius:4,
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        indexAxis:"y",
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{title:([item])=>data[item.dataIndex].dev,label:ctx=>`Avg age: ${ctx.raw}d`}}
+        },
+        scales:{
+          x:{ticks:{color:"rgba(226,232,240,0.6)",font:{size:11},callback:v=>`${v}d`},grid:{color:"rgba(255,255,255,0.05)"},border:{color:"rgba(255,255,255,0.05)"}},
+          y:{ticks:{color:"rgba(226,232,240,0.7)",font:{size:11}},grid:{display:false},border:{color:"rgba(255,255,255,0.05)"}},
+        }
+      }
+    });
+    return()=>{if(chartRef.current)chartRef.current.destroy();};
+  },[data]);
+
+  const h=Math.max(200,data.length*38+60);
+  return(
+    <div className="card" style={{padding:20,marginBottom:20}}>
+      <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>Average ticket age per developer</div>
+      <div style={{position:"relative",height:h}}>
+        <canvas ref={canvasRef} role="img" aria-label="Horizontal bar chart showing average ticket age per developer"/>
+      </div>
+    </div>
+  );
+}
+
+function App(){
+  const [tab,setTab]=useState("tickets");
+  const [search,setSearch]=useState("");
+  const [aFilter,setAFilter]=useState("All");
+  const [sFilter,setSFilter]=useState("All");
+  const [showDevInfo,setShowDevInfo]=useState(false);
+  const [showSPChart,setShowSPChart]=useState(false);
+  const infoRef=useRef(null);
+
+  useEffect(()=>{
+    const h=(e)=>{if(infoRef.current&&!infoRef.current.contains(e.target))setShowDevInfo(false);};
+    document.addEventListener("mousedown",h);return()=>document.removeEventListener("mousedown",h);
+  },[]);
+
+  const assignees=useMemo(()=>["All",...Array.from(new Set(ISSUES.map(i=>i.assignee))).sort()],[]);
+  const statuses=useMemo(()=>["All",...Array.from(new Set(ISSUES.map(i=>i.status))).sort()],[]);
+
+  const filtered=useMemo(()=>ISSUES.filter(i=>{
+    const ms=i.summary.toLowerCase().includes(search.toLowerCase())||i.key.toLowerCase().includes(search.toLowerCase());
+    const ma=aFilter==="All"||i.assignee===aFilter;
+    const ms2=sFilter==="All"||i.status===sFilter;
+    return ms&&ma&&ms2;
+  }),[search,aFilter,sFilter]);
+
+  const devDone=useMemo(()=>{
+    const m={};
+    ISSUES.filter(i=>i.status==="Dev Done").forEach(i=>{m[i.assignee]=(m[i.assignee]||[]);m[i.assignee].push(i);});
+    return Object.entries(m).sort((a,b)=>b[1].length-a[1].length);
+  },[]);
+
+  const QA_TEAM=["Rashmi BR","Marcy Clothier"];
+  const qaTickets=useMemo(()=>{const m={};QA_TEAM.forEach(qa=>{m[qa]=ISSUES.filter(i=>i.assignee===qa&&i.status==="In QA");});return m;},[]);
+  const regressionTickets=useMemo(()=>ISSUES.filter(i=>i.regression),[]);
+  const completedSP=useMemo(()=>ISSUES.filter(i=>DONE_STATUSES.includes(i.status)).reduce((s,i)=>s+(SP_MAP[i.key]||2),0),[]);
+  const spByDev=useMemo(()=>{
+    const m={};
+    ISSUES.filter(i=>DONE_STATUSES.includes(i.status)&&DEVS.includes(i.assignee)).forEach(i=>{
+      m[i.assignee]=(m[i.assignee]||0)+(SP_MAP[i.key]||2);
+    });
+    return Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  },[]);
+
+  // ── Origin metrics
+  const rolledOver=useMemo(()=>ISSUES.filter(i=>getOrigin(i)==="rolledOver"),[]);
+  const sprintStartTickets=useMemo(()=>ISSUES.filter(i=>getOrigin(i)==="sprintStart"),[]);
+  const midSprintAdded=useMemo(()=>ISSUES.filter(i=>getOrigin(i)==="midSprint"),[]);
+
+  const total=ISSUES.length;
+  const devDoneCnt=ISSUES.filter(i=>i.status==="Dev Done").length;
+  const inQACnt=ISSUES.filter(i=>i.status==="In QA").length;
+  const blockedCnt=ISSUES.filter(i=>i.status==="Blocked").length;
+  const donePct=Math.round((completedSP/COMMITTED_SP)*100);
+
+  const sprintStart2=new Date("2026-04-01"),sprintEnd=new Date("2026-04-30");
+  const sprintPct=Math.min(100,Math.round(((TODAY-sprintStart2)/(sprintEnd-sprintStart2))*100));
+
+  const TABS=[
+    {key:"tickets",label:"All Tickets",icon:"🎫"},
+    {key:"devdone",label:"Dev Done & Review",icon:"🔀"},
+    {key:"qa",label:"QA Status",icon:"🧪"},
+    {key:"age",label:"Ticket Age",icon:"⏱"},
+    {key:"regression",label:"Regression",icon:"🔄"},
+  ];
+
+  return(
+    <div style={{minHeight:"100vh",paddingBottom:60}}>
+
+      {/* HEADER */}
+      <div style={{background:"linear-gradient(135deg,#0f0f13 0%,#1a0a00 100%)",borderBottom:"1px solid rgba(255,90,0,0.3)",padding:"16px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100,backdropFilter:"blur(20px)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          <div style={{background:"#FF5A00",borderRadius:10,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:"#fff",letterSpacing:-1}}>OP</div>
+          <div>
+            <div style={{fontSize:16,fontWeight:800,color:"#fff",letterSpacing:"-0.3px"}}>Optum Engineering</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Sprint 52 · Apr 1 – Apr 30, 2026</div>
+          </div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:20}}>
+          <div style={{position:"relative"}} ref={infoRef}>
+            <button onClick={()=>setShowDevInfo(!showDevInfo)} style={{background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",color:"#e2e8f0",borderRadius:20,padding:"5px 14px",fontSize:12,display:"flex",alignItems:"center",gap:6}}>
+              <span style={{background:"#FF5A00",borderRadius:"50%",width:16,height:16,display:"inline-flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:"#fff"}}>i</span>
+              Dev Team
+            </button>
+            {showDevInfo&&(
+              <div className="glass fade" style={{position:"absolute",right:0,top:"calc(100% + 8px)",borderRadius:12,padding:16,minWidth:220,zIndex:200}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#FF5A00",marginBottom:10,textTransform:"uppercase",letterSpacing:1}}>Developers – Sprint 52</div>
+                {DEVS.map(d=>(
+                  <div key={d} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+                    <div style={{width:26,height:26,borderRadius:"50%",background:"linear-gradient(135deg,#FF5A00,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,color:"#fff"}}>{d.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+                    <span style={{fontSize:12,color:"#e2e8f0"}}>{d}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Synced Apr 9, 2026</div>
+        </div>
+      </div>
+
+      {/* TIMELINE */}
+      <div style={{background:"rgba(255,90,0,0.05)",borderBottom:"1px solid rgba(255,90,0,0.15)",padding:"12px 32px",display:"flex",alignItems:"center",gap:24,overflowX:"auto",flexWrap:"nowrap"}}>
+        {MILESTONES.map((m,i)=>{
+          const d=new Date(m.date);
+          const isPast=d<TODAY,isToday=d.toDateString()===TODAY.toDateString();
+          return(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap",opacity:isPast?0.6:1}}>
+              {i>0&&<div style={{width:20,height:1,background:"rgba(255,255,255,0.15)",flexShrink:0}}/>}
+              <div style={{fontSize:12,color:m.color,fontWeight:isToday?800:600}}>
+                <span style={{marginRight:4}}>{m.icon}</span>{m.label}
+                <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginLeft:6}}>{m.date.slice(5)}</span>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{marginLeft:"auto",flexShrink:0,display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Sprint progress</span>
+          <div style={{width:100,height:6,background:"rgba(255,255,255,0.08)",borderRadius:3,overflow:"hidden"}}>
+            <div style={{width:`${sprintPct}%`,height:"100%",background:"linear-gradient(90deg,#FF5A00,#fbbf24)",borderRadius:3}}/>
+          </div>
+          <span style={{fontSize:11,color:"#FF5A00",fontWeight:700}}>{sprintPct}%</span>
+        </div>
+      </div>
+
+      {/* STAT CARDS */}
+      <div style={{padding:"20px 32px 0",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14}}>
+        {[
+          {label:"Total Tickets",val:total,icon:"🎫",color:"#60a5fa"},
+          {label:"Dev Done",val:devDoneCnt,icon:"🔀",color:"#a78bfa"},
+          {label:"In QA",val:inQACnt,icon:"🧪",color:"#f472b6"},
+          {label:"Blocked",val:blockedCnt,icon:"🚫",color:"#f87171"},
+          {label:"Regression",val:regressionTickets.length,icon:"🔄",color:"#fbbf24"},
+        ].map(s=>(
+          <div key={s.label} className="card" style={{padding:"16px 18px"}}>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>{s.icon} {s.label}</div>
+            <div style={{fontSize:32,fontWeight:800,color:s.color,letterSpacing:"-1px"}}>{s.val}</div>
+          </div>
+        ))}
+        <div className="card" style={{padding:"16px 18px",cursor:"pointer",gridColumn:"span 2"}} onClick={()=>setShowSPChart(!showSPChart)}>
+          <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>📈 Story Points · click for breakdown</div>
+          <div style={{display:"flex",alignItems:"flex-end",gap:12}}>
+            <div><div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Committed</div><div style={{fontSize:26,fontWeight:800,color:"#60a5fa"}}>{COMMITTED_SP}</div></div>
+            <div style={{fontSize:20,color:"rgba(255,255,255,0.2)"}}>vs</div>
+            <div><div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Completed</div><div style={{fontSize:26,fontWeight:800,color:"#34d399"}}>{completedSP}</div></div>
+            <div style={{marginLeft:"auto",display:"flex",flexDirection:"column",alignItems:"flex-end"}}>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Completion</div>
+              <div style={{fontSize:22,fontWeight:800,color:donePct>=70?"#34d399":donePct>=40?"#fbbf24":"#f87171"}}>{donePct}%</div>
+            </div>
+          </div>
+          <div style={{height:4,background:"rgba(255,255,255,0.07)",borderRadius:2,marginTop:10,overflow:"hidden"}}>
+            <div style={{width:`${donePct}%`,height:"100%",background:"linear-gradient(90deg,#34d399,#60a5fa)",borderRadius:2,transition:"width .5s"}}/>
+          </div>
+        </div>
+      </div>
+
+      {/* SP breakdown */}
+      {showSPChart&&(
+        <div style={{padding:"14px 32px 0"}} className="fade">
+          <div className="card" style={{padding:20}}>
+            <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:16}}>📊 Story Points Completed — by Developer</div>
+            {spByDev.map(([dev,sp])=>{
+              const pct=Math.round((sp/Math.max(...spByDev.map(x=>x[1])))*100);
+              return(
+                <div key={dev} style={{marginBottom:12}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:4}}>
+                    <span style={{color:"#e2e8f0"}}>{dev}</span>
+                    <span style={{color:"#34d399",fontWeight:700}}>{sp} SP</span>
+                  </div>
+                  <div style={{height:6,background:"rgba(255,255,255,0.06)",borderRadius:3,overflow:"hidden"}}>
+                    <div style={{width:`${pct}%`,height:"100%",background:"linear-gradient(90deg,#FF5A00,#34d399)",borderRadius:3,transition:"width .6s"}}/>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── TICKET ORIGIN METRICS BANNER ── */}
+      <div style={{padding:"14px 32px 0"}}>
+        <div className="card" style={{padding:"18px 24px"}}>
+          <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.4)",textTransform:"uppercase",letterSpacing:1,marginBottom:14}}>🗂 Ticket Origin — Sprint 52</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
+            {/* Rolled over */}
+            <div style={{background:"rgba(248,113,113,0.08)",border:"1px solid rgba(248,113,113,0.2)",borderRadius:10,padding:"14px 18px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <span style={{fontSize:16}}>🔁</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#f87171",textTransform:"uppercase",letterSpacing:1}}>Rolled Over</span>
+              </div>
+              <div style={{fontSize:36,fontWeight:800,color:"#f87171",letterSpacing:"-1px",lineHeight:1}}>{rolledOver.length}</div>
+              <div style={{fontSize:11,color:"rgba(248,113,113,0.6)",marginTop:4}}>Created before Apr 1</div>
+              <div style={{marginTop:10,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
+                <div style={{width:`${Math.round(rolledOver.length/total*100)}%`,height:"100%",background:"#f87171",borderRadius:2}}/>
+              </div>
+              <div style={{fontSize:10,color:"rgba(248,113,113,0.5)",marginTop:4}}>{Math.round(rolledOver.length/total*100)}% of sprint</div>
+            </div>
+            {/* Sprint start */}
+            <div style={{background:"rgba(52,211,153,0.08)",border:"1px solid rgba(52,211,153,0.2)",borderRadius:10,padding:"14px 18px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <span style={{fontSize:16}}>🚀</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#34d399",textTransform:"uppercase",letterSpacing:1}}>Sprint Start</span>
+              </div>
+              <div style={{fontSize:36,fontWeight:800,color:"#34d399",letterSpacing:"-1px",lineHeight:1}}>{sprintStartTickets.length}</div>
+              <div style={{fontSize:11,color:"rgba(52,211,153,0.6)",marginTop:4}}>Added on Apr 1</div>
+              <div style={{marginTop:10,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
+                <div style={{width:`${Math.round(sprintStartTickets.length/total*100)}%`,height:"100%",background:"#34d399",borderRadius:2}}/>
+              </div>
+              <div style={{fontSize:10,color:"rgba(52,211,153,0.5)",marginTop:4}}>{Math.round(sprintStartTickets.length/total*100)}% of sprint</div>
+            </div>
+            {/* Mid-sprint */}
+            <div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,padding:"14px 18px"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <span style={{fontSize:16}}>➕</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#fbbf24",textTransform:"uppercase",letterSpacing:1}}>Added Mid-Sprint</span>
+              </div>
+              <div style={{fontSize:36,fontWeight:800,color:"#fbbf24",letterSpacing:"-1px",lineHeight:1}}>{midSprintAdded.length}</div>
+              <div style={{fontSize:11,color:"rgba(251,191,36,0.6)",marginTop:4}}>Created after Apr 1</div>
+              <div style={{marginTop:10,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
+                <div style={{width:`${Math.round(midSprintAdded.length/total*100)}%`,height:"100%",background:"#fbbf24",borderRadius:2}}/>
+              </div>
+              <div style={{fontSize:10,color:"rgba(251,191,36,0.5)",marginTop:4}}>{Math.round(midSprintAdded.length/total*100)}% of sprint</div>
+            </div>
+          </div>
+          {/* Mid-sprint breakdown by date */}
+          {midSprintAdded.length>0&&(
+            <div style={{marginTop:14,borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginBottom:8,fontWeight:600}}>MID-SPRINT ADDITIONS BY DATE</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {Object.entries(
+                  midSprintAdded.reduce((m,i)=>{m[i.created]=(m[i.created]||0)+1;return m;},{})
+                ).sort(([a],[b])=>a.localeCompare(b)).map(([date,cnt])=>(
+                  <div key={date} style={{background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#fbbf24"}}>
+                    <span style={{fontWeight:700}}>{date.slice(5)}</span>
+                    <span style={{marginLeft:5,opacity:0.7}}>+{cnt}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div style={{padding:"20px 32px 0",display:"flex",gap:4,borderBottom:"1px solid rgba(255,255,255,0.06)",marginTop:14,overflowX:"auto"}}>
+        {TABS.map(t=>(
+          <button key={t.key} onClick={()=>setTab(t.key)} style={{
+            background:tab===t.key?"rgba(255,90,0,0.15)":"transparent",
+            border:tab===t.key?"1px solid rgba(255,90,0,0.4)":"1px solid transparent",
+            color:tab===t.key?"#FF5A00":"rgba(255,255,255,0.45)",
+            borderRadius:"8px 8px 0 0",padding:"9px 16px",fontSize:12,fontWeight:600,whiteSpace:"nowrap",transition:"all .15s",
+          }}>{t.icon} {t.label}</button>
+        ))}
+      </div>
+
+      <div style={{padding:"24px 32px"}} className="fade">
+
+        {/* ALL TICKETS */}
+        {tab==="tickets"&&(
+          <>
+            <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap",alignItems:"center"}}>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍 Search ticket or summary..." style={{width:260}}/>
+              <select value={aFilter} onChange={e=>setAFilter(e.target.value)}>{assignees.map(a=><option key={a}>{a}</option>)}</select>
+              <select value={sFilter} onChange={e=>setSFilter(e.target.value)}>{statuses.map(s=><option key={s}>{s}</option>)}</select>
+              <span style={{fontSize:12,color:"rgba(255,255,255,0.3)"}}>{filtered.length} tickets</span>
+            </div>
+            <div className="card" style={{overflow:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <thead>
+                  <tr style={{borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                    {["Ticket","Summary","Assignee","Type","Priority","Status","Created","Origin"].map(h=>(
+                      <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((i,idx)=>{
+                    const origin=getOrigin(i);
+                    const originCfg={
+                      rolledOver:{c:"#f87171",bg:"rgba(248,113,113,0.12)",label:"Rolled Over"},
+                      sprintStart:{c:"#34d399",bg:"rgba(52,211,153,0.12)",label:"Sprint Start"},
+                      midSprint:{c:"#fbbf24",bg:"rgba(251,191,36,0.12)",label:"Mid-Sprint"},
+                    }[origin];
+                    return(
+                      <tr key={i.key} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:idx%2===0?"transparent":"rgba(255,255,255,0.015)"}}
+                        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,90,0,0.06)"}
+                        onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":"rgba(255,255,255,0.015)"}>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
+                          <a href={"https://capillarytech.atlassian.net/browse/"+i.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{i.key}</a>
+                          {i.regression&&<span style={{marginLeft:6,background:"rgba(251,191,36,0.15)",color:"#fbbf24",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:4,border:"1px solid rgba(251,191,36,0.3)"}}>REG</span>}
+                        </td>
+                        <td style={{padding:"10px 14px",maxWidth:300,color:"#cbd5e1"}}>{i.summary}</td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
+                          <span style={{background:"rgba(255,90,0,0.1)",color:"#fb923c",padding:"2px 8px",borderRadius:20,fontSize:11,fontWeight:600}}>{i.assignee}</span>
+                        </td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><span style={{display:"inline-flex",alignItems:"center",gap:4}}><TypeIcon type={i.type}/><span style={{color:"rgba(255,255,255,0.5)",fontSize:12}}>{i.type}</span></span></td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
+                          <span style={{display:"inline-block",width:8,height:8,borderRadius:"50%",background:PRIO_CLR[i.priority]||"#94a3b8",marginRight:5}}/>
+                          <span style={{fontSize:12,color:"rgba(255,255,255,0.5)"}}>{i.priority}</span>
+                        </td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><StatusPill s={i.status}/></td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:12}}>{i.created}</td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
+                          <span style={{background:originCfg.bg,color:originCfg.c,padding:"3px 8px",borderRadius:8,fontSize:10,fontWeight:700,border:`1px solid ${originCfg.c}30`}}>{originCfg.label}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* DEV DONE */}
+        {tab==="devdone"&&(
+          <div>
+            <div style={{background:"rgba(167,139,250,0.1)",border:"1px solid rgba(167,139,250,0.25)",borderRadius:10,padding:"12px 16px",marginBottom:20,fontSize:13,color:"#c4b5fd",display:"flex",alignItems:"center",gap:8}}>
+              <span>🔀</span> <strong>{devDoneCnt} tickets in Dev Done</strong> — awaiting merge and code review.
+            </div>
+            {devDone.map(([assignee,tickets])=>(
+              <div key={assignee} className="card fade" style={{padding:20,marginBottom:16}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+                  <div style={{display:"flex",alignItems:"center",gap:12}}>
+                    <div style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg,#FF5A00,#7c3aed)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:"#fff"}}>
+                      {assignee.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                    </div>
+                    <div>
+                      <div style={{fontWeight:700,fontSize:15,color:"#fff"}}>{assignee}</div>
+                      <div style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>{tickets.length} ticket{tickets.length!==1?"s":""} ready for review</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <div style={{background:"rgba(167,139,250,0.15)",border:"1px solid rgba(167,139,250,0.3)",color:"#a78bfa",padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700}}>
+                      🔍 Reviewer: {REVIEWER_MAP[assignee]||"TBD"}
+                    </div>
+                    <div style={{background:"rgba(251,191,36,0.15)",border:"1px solid rgba(251,191,36,0.3)",color:"#fbbf24",padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:700}}>Needs Merge ↗</div>
+                  </div>
+                </div>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                  <thead>
+                    <tr style={{borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
+                      {["Ticket","Summary","Priority","Age","SP"].map(h=>(
+                        <th key={h} style={{padding:"8px 12px",textAlign:"left",fontSize:10,fontWeight:700,textTransform:"uppercase",color:"rgba(255,255,255,0.25)",letterSpacing:1}}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tickets.map(t=>{
+                      const assignDate=ASSIGN_DATE[t.key]||t.created;
+                      const days=daysDiff(assignDate,TODAY);
+                      const ab=ageBadge(days);
+                      return(
+                        <tr key={t.key} style={{borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                          <td style={{padding:"9px 12px"}}><a href={"https://capillarytech.atlassian.net/browse/"+t.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{t.key}</a></td>
+                          <td style={{padding:"9px 12px",color:"#cbd5e1",maxWidth:320}}>{t.summary}</td>
+                          <td style={{padding:"9px 12px",whiteSpace:"nowrap"}}>
+                            <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:PRIO_CLR[t.priority]||"#94a3b8",marginRight:4}}/>
+                            <span style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{t.priority}</span>
+                          </td>
+                          <td style={{padding:"9px 12px"}}><span style={{background:ab.bg,color:ab.c,padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:700,border:`1px solid ${ab.c}40`}}>{days}d</span></td>
+                          <td style={{padding:"9px 12px"}}><span style={{background:"rgba(96,165,250,0.15)",color:"#60a5fa",padding:"2px 8px",borderRadius:8,fontSize:11,fontWeight:700}}>{SP_MAP[t.key]||2} SP</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* QA STATUS */}
+        {tab==="qa"&&(
+          <div>
+            <div style={{background:"rgba(244,114,182,0.08)",border:"1px solid rgba(244,114,182,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:20,fontSize:13,color:"#f9a8d4"}}>
+              🧪 <strong>QA Team: Rashmi BR &amp; Marcy Clothier</strong>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+              {["Rashmi BR","Marcy Clothier"].map(qa=>{
+                const tickets=qaTickets[qa]||[];
+                const all=ISSUES.filter(i=>i.assignee===qa);
+                const sc={};all.forEach(i=>{sc[i.status]=(sc[i.status]||0)+1;});
+                return(
+                  <div key={qa} className="card" style={{padding:22}}>
+                    <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:18}}>
+                      <div style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg,#f472b6,#FF5A00)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:800,color:"#fff"}}>{qa.split(" ").map(n=>n[0]).join("").slice(0,2)}</div>
+                      <div>
+                        <div style={{fontWeight:800,fontSize:16,color:"#fff"}}>{qa}</div>
+                        <div style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>QA Engineer · {all.length} sprint tickets</div>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>
+                      {Object.entries(sc).sort((a,b)=>b[1]-a[1]).map(([s,cnt])=><StatusPill key={s} s={`${s} (${cnt})`}/>)}
+                    </div>
+                    <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:14}}>
+                      <div style={{fontSize:12,fontWeight:700,color:"#f472b6",marginBottom:10}}>🧪 Currently In QA: {tickets.length}</div>
+                      {tickets.length===0?<p style={{fontSize:13,color:"#475569"}}>No tickets In QA.</p>
+                        :tickets.map(t=>(
+                          <div key={t.key} style={{background:"rgba(244,114,182,0.07)",border:"1px solid rgba(244,114,182,0.15)",borderRadius:8,padding:"10px 14px",marginBottom:8}}>
+                            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                              <a href={"https://capillarytech.atlassian.net/browse/"+t.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{t.key}</a>
+                              <span style={{fontSize:10,color:"rgba(255,255,255,0.3)"}}>since {t.created}</span>
+                            </div>
+                            <div style={{fontSize:12,color:"#cbd5e1"}}>{t.summary}</div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TICKET AGE */}
+        {tab==="age"&&(
+          <div>
+            <div style={{background:"rgba(96,165,250,0.08)",border:"1px solid rgba(96,165,250,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:20,fontSize:13,color:"#93c5fd",display:"flex",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+              ⏱ <strong>Age is counted from when the ticket was assigned</strong> (or sprint start, whichever is later).
+              {[["#34d399","0–7d"],["#fbbf24","8–14d"],["#f87171","14d+"]].map(([c,l])=>(
+                <span key={l} style={{background:`${c}22`,color:c,padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:700,border:`1px solid ${c}40`}}>{l}</span>
+              ))}
+            </div>
+
+            <AgeChart issues={ISSUES}/>
+            <AvgAgeChart issues={ISSUES}/>
+
+            {/* Table */}
+            <div className="card" style={{overflow:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <thead>
+                  <tr style={{borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                    {["Ticket","Summary","Assignee","Status","Assigned","Age"].map(h=>(
+                      <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...ISSUES].filter(i=>DEVS.includes(i.assignee)).sort((a,b)=>daysDiff(ASSIGN_DATE[b.key]||b.created,TODAY)-daysDiff(ASSIGN_DATE[a.key]||a.created,TODAY)).map((i,idx)=>{
+                    const assignDate=ASSIGN_DATE[i.key]||i.created;
+                    const days=daysDiff(assignDate,TODAY);
+                    const ab=ageBadge(days);
+                    const barPct=Math.min(100,Math.round((days/30)*100));
+                    return(
+                      <tr key={i.key} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:idx%2===0?"transparent":"rgba(255,255,255,0.015)"}}
+                        onMouseEnter={e=>e.currentTarget.style.background="rgba(255,90,0,0.05)"}
+                        onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":"rgba(255,255,255,0.015)"}>
+                        <td style={{padding:"10px 14px"}}><a href={"https://capillarytech.atlassian.net/browse/"+i.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{i.key}</a></td>
+                        <td style={{padding:"10px 14px",maxWidth:280,color:"#cbd5e1"}}>{i.summary}</td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><span style={{background:"rgba(255,90,0,0.1)",color:"#fb923c",padding:"2px 8px",borderRadius:20,fontSize:11,fontWeight:600}}>{i.assignee}</span></td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><StatusPill s={i.status}/></td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:11}}>{assignDate}</td>
+                        <td style={{padding:"10px 14px",minWidth:130}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            <div style={{flex:1,height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden",minWidth:50}}>
+                              <div style={{width:`${barPct}%`,height:"100%",background:ab.c,borderRadius:2,opacity:0.8}}/>
+                            </div>
+                            <span style={{background:ab.bg,color:ab.c,padding:"2px 8px",borderRadius:8,fontSize:11,fontWeight:700,border:`1px solid ${ab.c}40`,whiteSpace:"nowrap"}}>{days}d</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* REGRESSION */}
+        {tab==="regression"&&(
+          <div>
+            <div style={{background:"rgba(251,191,36,0.08)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:10,padding:"12px 16px",marginBottom:20,fontSize:13,color:"#fde68a",display:"flex",alignItems:"center",gap:8}}>
+              🔄 <strong>{regressionTickets.length} Regression tickets</strong> found in Sprint 52.
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:12,marginBottom:24}}>
+              {Object.entries(regressionTickets.reduce((m,i)=>{m[i.status]=(m[i.status]||0)+1;return m;},{})).map(([s,cnt])=>{
+                const cfg=STATUS_CFG[s]||{c:"#94a3b8",bg:"rgba(148,163,184,0.15)"};
+                return(
+                  <div key={s} className="card" style={{padding:"14px 16px"}}>
+                    <div style={{fontSize:22,fontWeight:800,color:cfg.c}}>{cnt}</div>
+                    <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:4}}><StatusPill s={s}/></div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="card" style={{overflow:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+                <thead>
+                  <tr style={{borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                    {["Ticket","Summary","Assignee","Type","Priority","Status","Created"].map(h=>(
+                      <th key={h} style={{padding:"11px 14px",textAlign:"left",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {regressionTickets.map((i,idx)=>(
+                    <tr key={i.key} style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:idx%2===0?"transparent":"rgba(255,255,255,0.015)"}}
+                      onMouseEnter={e=>e.currentTarget.style.background="rgba(251,191,36,0.05)"}
+                      onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":"rgba(255,255,255,0.015)"}>
+                      <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
+                        <a href={"https://capillarytech.atlassian.net/browse/"+i.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{i.key}</a>
+                        <span style={{marginLeft:6,background:"rgba(251,191,36,0.15)",color:"#fbbf24",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:4,border:"1px solid rgba(251,191,36,0.3)"}}>REG</span>
+                      </td>
+                      <td style={{padding:"10px 14px",maxWidth:340,color:"#cbd5e1"}}>{i.summary}</td>
+                      <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><span style={{background:"rgba(255,90,0,0.1)",color:"#fb923c",padding:"2px 8px",borderRadius:20,fontSize:11,fontWeight:600}}>{i.assignee}</span></td>
+                      <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><span style={{display:"inline-flex",alignItems:"center",gap:4}}><TypeIcon type={i.type}/><span style={{color:"rgba(255,255,255,0.4)",fontSize:12}}>{i.type}</span></span></td>
+                      <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
+                        <span style={{display:"inline-block",width:7,height:7,borderRadius:"50%",background:PRIO_CLR[i.priority]||"#94a3b8",marginRight:5}}/>
+                        <span style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>{i.priority}</span>
+                      </td>
+                      <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><StatusPill s={i.status}/></td>
+                      <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:12}}>{i.created}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
