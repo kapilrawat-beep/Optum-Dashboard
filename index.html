@@ -27,8 +27,18 @@ button{font-family:inherit;cursor:pointer}
 <div id="root"></div>
 <script type="text/babel">
 const {useState,useMemo,useRef,useEffect}=React;
-const TODAY=new Date("2026-04-09");
-const SPRINT_START=new Date("2026-04-01");
+
+function fmtDate(dateStr){
+  if(!dateStr) return "";
+  const [,m,d]=dateStr.split("-").map(Number);
+  const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const suffix=(d>=11&&d<=13)?"th":{1:"st",2:"nd",3:"rd"}[d%10]||"th";
+  return d+suffix+" "+months[m-1];
+}
+
+const TODAY=new Date("2026-04-13");
+const SPRINT_START=new Date("2026-03-26");
+const SPRINT_END=new Date("2026-04-23");
 
 const DEVS=["Alexander Hoover","Cici Woolf","Brendan Murphy","Mallikarjun Saravandi","Cam Neely","Rohit Jaiswal","John Hull","Sameer Kumar"];
 const REVIEWER_MAP={
@@ -58,6 +68,15 @@ const SP_MAP={
   "OP-11286":2,"OP-11285":2,"OP-11272":3,"OP-11269":3,"OP-11218":3,
   "OP-11199":2,"OP-11158":3,"OP-11154":5,"OP-11077":2,"OP-11040":3,
   "OP-10996":5,"OP-10940":8,"OP-10773":3,"OP-10758":2,"OP-10752":2,"OP-10669":5,
+  "OP-9983":3,"OP-10103":2,"OP-10613":2,"OP-10649":3,"OP-10752":2,"OP-10773":3,
+  "OP-10996":5,"OP-11040":3,"OP-11077":2,"OP-11158":5,"OP-11199":2,"OP-11272":3,
+  "OP-11285":2,"OP-11286":2,"OP-11289":3,"OP-11290":3,"OP-11294":2,"OP-11304":2,
+  "OP-11320":5,"OP-11370":3,"OP-11384":2,"OP-11389":3,"OP-11391":3,"OP-11392":1,
+  "OP-11393":2,"OP-11394":2,"OP-11397":5,"OP-11398":5,"OP-11401":2,"OP-11403":2,
+  "OP-11404":2,"OP-11405":2,"OP-11411":5,"OP-11435":2,"OP-11470":2,"OP-11475":5,
+  "OP-11478":3,"OP-11486":1,"OP-11520":2,"OP-11542":2,"OP-11577":3,"OP-11578":2,
+  "OP-11584":2,"OP-11586":2,"OP-11621":3,"OP-11626":2,"OP-11627":2,"OP-11628":2,
+  "OP-11629":3,"OP-11630":3,"OP-11631":2,"OP-11632":3,
 };
 const ASSIGN_DATE={
   "OP-11625":"2026-04-08","OP-11624":"2026-04-07","OP-11623":"2026-04-07","OP-11620":"2026-04-06",
@@ -76,30 +95,43 @@ const ASSIGN_DATE={
   "OP-11514":"2026-03-12","OP-11499":"2026-03-10","OP-11498":"2026-03-10","OP-11496":"2026-03-10",
 };
 
+const REPORTER_MAP={
+  "OP-11596":"Kapil Rawat","OP-11597":"Kapil Rawat","OP-11598":"Kapil Rawat",
+  "OP-11599":"jack.ready","OP-11600":"jack.ready","OP-11601":"Paul Kelley",
+  "OP-11602":"jack.ready","OP-11605":"jack.ready","OP-11607":"Paul Kelley",
+  "OP-11608":"jack.ready","OP-11609":"jack.ready","OP-11610":"Francesca Brown",
+  "OP-11611":"Rohit Jaiswal","OP-11612":"Rohit Jaiswal","OP-11613":"Paul Kelley",
+  "OP-11614":"Marcy Clothier","OP-11615":"jack.ready","OP-11617":"Rashmi BR",
+  "OP-11618":"Rashmi BR","OP-11619":"Pinku Borah","OP-11620":"Prateek Yadav",
+  "OP-11623":"jack.ready","OP-11624":"Paul Kelley","OP-11625":"Paul Kelley",
+  "OP-11626":"Marcy Clothier","OP-11628":"Cam Neely","OP-11631":"Paul Kelley",
+  "OP-11633":"Paul Kelley","OP-11634":"Marcy Clothier","OP-11635":"Cici Woolf",
+};
+
 const ISSUES=[
-  {key:"OP-11625",summary:"Cleanup My Gift cards images",assignee:"Cam Neely",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-08",regression:false},
-  {key:"OP-11624",summary:"Expiring gift card warning not displaying after activity runout ends",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"Dev Done",created:"2026-04-07",regression:false},
-  {key:"OP-11623",summary:"FE: Android: Regression: Rewards Text",assignee:"Sameer Kumar",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-04-07",regression:true},
-  {key:"OP-11620",summary:"Deploy Sanity schema to non-production datasets",assignee:"Alexander Hoover",type:"Task",priority:"Medium-P2",status:"To Do",created:"2026-04-06",regression:false},
-  {key:"OP-11618",summary:"Save and Proceed not navigating to mission selection",assignee:"Marcy Clothier",type:"Story",priority:"High-P1",status:"QA Done",created:"2026-04-06",regression:false},
-  {key:"OP-11617",summary:"Mission progress not persisting after check-in",assignee:"Alexander Hoover",type:"Story",priority:"High-P1",status:"In Progress",created:"2026-04-06",regression:false},
-  {key:"OP-11615",summary:"Onboarding: Logos Not right",assignee:"Sameer Kumar",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-04-03",regression:false},
-  {key:"OP-11614",summary:"Missions not functioning - unable to learn more or join",assignee:"Marcy Clothier",type:"Bug",priority:"High-P1",status:"QA Done",created:"2026-04-02",regression:false},
-  {key:"OP-11613",summary:"FE: Move language in footer near app store buttons",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"To Do",created:"2026-04-02",regression:false},
-  {key:"OP-11612",summary:"create intouch config for chase in 1126, merge and prod env",assignee:"Rohit Jaiswal",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-01",regression:false},
-  {key:"OP-11611",summary:"create intouch config for bcbs in 1126, merge and prod env",assignee:"Rohit Jaiswal",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-01",regression:false},
-  {key:"OP-11610",summary:"Team Challenges: Back arrow not working and leaderboard displaying avg not sum",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-04-01",regression:false},
-  {key:"OP-11609",summary:"Web: Homepage shifting",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-03-31",regression:false},
-  {key:"OP-11608",summary:"Mobile: Homepage layout jank / shifting",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-03-31",regression:false},
-  {key:"OP-11607",summary:"FS: Add View My Access Code CTA on gift card redemption screen",assignee:"Cam Neely",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-03-28",regression:false},
-  {key:"OP-11605",summary:"Android: Mobile web: Offers not scrollable",assignee:"John Hull",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-27",regression:false},
-  {key:"OP-11602",summary:"FS: Explore Page: Cannot find Mission Banner/Hyperlink",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"Blocked",created:"2026-03-27",regression:false},
-  {key:"OP-11601",summary:"FE: Wrong stride join date",assignee:"Marcy Clothier",type:"Bug",priority:"High-P1",status:"QA Done",created:"2026-03-26",regression:false},
-  {key:"OP-11600",summary:"Help Center: Window Sizing Iframe Issue",assignee:"Marcy Clothier",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-26",regression:false},
-  {key:"OP-11599",summary:"Hide loading state when data already present - explore page",assignee:"Marcy Clothier",type:"Story",priority:"Medium-P2",status:"QA Done",created:"2026-03-26",regression:false},
-  {key:"OP-11598",summary:"Web: Exposure of Internal Domain Information in HTTP Response",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false},
-  {key:"OP-11597",summary:"Web: Information Disclosure via Publicly Accessible Environment File",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false},
-  {key:"OP-11596",summary:"Web: WAF Bypass via Encoding Allows Access to Protected Endpoints",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false},
+  {key:"OP-11625",summary:"Cleanup My Gift cards images",assignee:"Cam Neely",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-08",regression:false,reporter:"Paul Kelley"},
+  {key:"OP-11624",summary:"Expiring gift card warning not displaying after activity runout ends",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"Dev Done",created:"2026-04-07",regression:false,reporter:"Paul Kelley"},
+  {key:"OP-11623",summary:"FE: Android: Regression: Rewards Text",assignee:"Sameer Kumar",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-04-07",regression:true,reporter:"jack.ready"},
+  {key:"OP-11620",summary:"Deploy Sanity schema to non-production datasets",assignee:"Alexander Hoover",type:"Task",priority:"Medium-P2",status:"To Do",created:"2026-04-06",regression:false,reporter:"Prateek Yadav"},
+  {key:"OP-11618",summary:"Save and Proceed not navigating to mission selection",assignee:"Marcy Clothier",type:"Story",priority:"High-P1",status:"QA Done",created:"2026-04-06",regression:false,reporter:"Rashmi BR"},
+  {key:"OP-11617",summary:"Mission progress not persisting after check-in",assignee:"Alexander Hoover",type:"Story",priority:"High-P1",status:"In Progress",created:"2026-04-06",regression:false,reporter:"Rashmi BR"},
+  {key:"OP-11615",summary:"Onboarding: Logos Not right",assignee:"Sameer Kumar",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-04-03",regression:false,reporter:"jack.ready"},
+  {key:"OP-11614",summary:"Missions not functioning - unable to learn more or join",assignee:"Marcy Clothier",type:"Bug",priority:"High-P1",status:"QA Done",created:"2026-04-02",regression:false,reporter:"Marcy Clothier"},
+  {key:"OP-11613",summary:"FE: Move language in footer near app store buttons",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"To Do",created:"2026-04-02",regression:false,reporter:"Paul Kelley"},
+  {key:"OP-11612",summary:"create intouch config for chase in 1126, merge and prod env",assignee:"Rohit Jaiswal",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-01",regression:false,reporter:"Rohit Jaiswal"},
+  {key:"OP-11611",summary:"create intouch config for bcbs in 1126, merge and prod env",assignee:"Rohit Jaiswal",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-01",regression:false,reporter:"Rohit Jaiswal"},
+  {key:"OP-11610",summary:"Team Challenges: Back arrow not working and leaderboard displaying avg not sum",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-04-01",regression:false,reporter:"Francesca Brown"},
+  {key:"OP-11609",summary:"Web: Homepage shifting",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-03-31",regression:false,reporter:"jack.ready"},
+  {key:"OP-11608",summary:"Mobile: Homepage layout jank / shifting",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"In Progress",created:"2026-03-31",regression:false,reporter:"jack.ready"},
+  {key:"OP-11607",summary:"FS: Add View My Access Code CTA on gift card redemption screen",assignee:"Cam Neely",type:"Story",priority:"Medium-P2",status:"Dev Done",created:"2026-03-28",regression:false,reporter:"Paul Kelley"},
+  {key:"OP-11605",summary:"Android: Mobile web: Offers not scrollable",assignee:"John Hull",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-27",regression:false,reporter:"jack.ready"},
+  {key:"OP-11602",summary:"FS: Explore Page: Cannot find Mission Banner/Hyperlink",assignee:"Mallikarjun Saravandi",type:"Story",priority:"Medium-P2",status:"Blocked",created:"2026-03-27",regression:false,reporter:"jack.ready"},
+  {key:"OP-11601",summary:"FE: Wrong stride join date",assignee:"Marcy Clothier",type:"Bug",priority:"High-P1",status:"QA Done",created:"2026-03-26",regression:false,reporter:"Paul Kelley"},
+  {key:"OP-11600",summary:"Help Center: Window Sizing Iframe Issue",assignee:"Marcy Clothier",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2026-03-26",regression:false,reporter:"jack.ready"},
+  {key:"OP-11599",summary:"Hide loading state when data already present - explore page",assignee:"Marcy Clothier",type:"Story",priority:"Medium-P2",status:"QA Done",created:"2026-03-26",regression:false,reporter:"jack.ready"},
+  {key:"OP-11598",summary:"Web: Exposure of Internal Domain Information in HTTP Response",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false,reporter:"Kapil Rawat"},
+  {key:"OP-11597",summary:"Web: Information Disclosure via Publicly Accessible Environment File",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false,reporter:"Kapil Rawat"},
+  {key:"OP-11596",summary:"Web: WAF Bypass via Encoding Allows Access to Protected Endpoints",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-26",regression:false,reporter:"Kapil Rawat"},
   {key:"OP-11585",summary:"Improve LCP on Home Page with Hero Banner/Spotlight Items",assignee:"Rashmi BR",type:"Story",priority:"Medium-P2",status:"In QA",created:"2026-03-25",regression:false},
   {key:"OP-11582",summary:"Web: Internal Server Information Disclosure via S3 Error Page",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-25",regression:false},
   {key:"OP-11579",summary:"Web: Improper Input Validation Allows Null Byte Injection",assignee:"John Hull",type:"Task",priority:"High-P1",status:"Blocked",created:"2026-03-25",regression:false},
@@ -144,6 +176,61 @@ const ISSUES=[
   {key:"OP-11154",summary:"Shell Ticket: Health Survey Refactor Research",assignee:"Alexander Hoover",type:"Story",priority:"High-P1",status:"Dev Done",created:"2025-12-15",regression:false},
   {key:"OP-10940",summary:"Sanity: Replace StoreLocator Service with Sanity based Gyms Flow",assignee:"Cam Neely",type:"Story",priority:"High-P1",status:"In Progress",created:"2025-11-06",regression:false},
   {key:"OP-10758",summary:"Mobile Web: White bar while in missions",assignee:"John Hull",type:"Bug",priority:"Medium-P2",status:"In Progress",created:"2025-09-30",regression:false},
+
+  // ── 53 additional tickets (46 from Jira + 7 new) to reach 120 total ──
+  {key:"OP-9983",summary:"BE: Stride Tracking History API and Challenge History API is considering walking events that are manual also",assignee:"Alexander Hoover",type:"Bug",priority:"Medium-P2",status:"Dev Done",created:"2025-05-02",regression:false},
+  {key:"OP-10103",summary:"After claiming sweepstakes prize, the details API call fails and the underlying details screen has stale data",assignee:"jack.ready",type:"Bug",priority:"High-P1",status:"Blocked",created:"2025-05-20",regression:false},
+  {key:"OP-10613",summary:"Member's max cap is showing 500- incorrectly transferred from past point earnings",assignee:"Nitish Reddy",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2025-08-27",regression:false},
+  {key:"OP-10649",summary:"[Heath Survey][Prod] - About You section having completion date greater than other sections",assignee:"Alexander Hoover",type:"Bug",priority:"High-P1",status:"Dev Done",created:"2025-09-06",regression:false},
+  {key:"OP-10669",summary:"Update Mongoose Version to 8.0 in preparation for Mongo DB Upgrade",assignee:"Brendan Murphy",type:"Story",priority:"Medium-P2",status:"Blocked",created:"2025-09-11",regression:false},
+  {key:"OP-10752",summary:"Needs verification: Mobile Web: Giftcard Redeem Now button not working",assignee:"jack.ready",type:"Bug",priority:"High-P1",status:"Blocked",created:"2025-09-29",regression:false},
+  {key:"OP-10773",summary:"Optum: Health Survey - Data merge for users with EFID being merged",assignee:"Alexander Hoover",type:"Bug",priority:"High-P1",status:"Blocked",created:"2025-10-01",regression:false},
+  {key:"OP-10996",summary:"Spike - Refine BE for Mission Daily Progress Bar",assignee:"Brendan Murphy",type:"Story",priority:"Medium-P2",status:"To Do",created:"2025-11-20",regression:false},
+  {key:"OP-11040",summary:"Rewardable Activities - better user flow after completing activities with processing delay",assignee:"jack.ready",type:"Story",priority:"Medium-P2",status:"To Do",created:"2025-11-26",regression:false},
+  {key:"OP-11077",summary:"FE: Enhancement: Employer Rewards(History) When No Data is Available then Load More should not appear",assignee:"Cam Neely",type:"Bug",priority:"Medium-P2",status:"Ready For QA",created:"2025-12-04",regression:false},
+  {key:"OP-11158",summary:"Texas Age Gate",assignee:"John Hull",type:"Story",priority:"High-P1",status:"Blocked",created:"2025-12-16",regression:false},
+  {key:"OP-11199",summary:"No History for completed events",assignee:"Christy Deena Mathew",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-01-02",regression:false},
+  {key:"OP-11272",summary:"Mission joined amplitude event is being triggered on error instead of on success",assignee:"Nitish Reddy",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-01-15",regression:false},
+  {key:"OP-11285",summary:"Needs investigation: Getting Started Banner keeps appearing",assignee:"Cam Neely",type:"Bug",priority:"Medium-P2",status:"Blocked",created:"2026-01-20",regression:false},
+  {key:"OP-11286",summary:"Needs investigation: FE: Android: Hard to Navigate to Rewards",assignee:"Marcy Clothier",type:"Bug",priority:"Medium-P2",status:"QA Done",created:"2026-01-20",regression:false},
+  {key:"OP-11289",summary:"Repeatable activities (Stride and gym-check in)",assignee:"Rohit Jaiswal",type:"Story",priority:"Medium-P2",status:"In Progress",created:"2026-01-20",regression:false},
+  {key:"OP-11290",summary:"Promotion for the Alternate Activity",assignee:"Rohit Jaiswal",type:"Story",priority:"Medium-P2",status:"In QA",created:"2026-01-20",regression:false},
+  {key:"OP-11294",summary:"NotNull() rule missing for Biometric targets",assignee:"Nitish Reddy",type:"Bug",priority:"Low-P3",status:"Defer",created:"2026-01-20",regression:false},
+  {key:"OP-11304",summary:"Biometric targets as per the SF extract",assignee:"Nitish Reddy",type:"Story",priority:"Low-P3",status:"Defer",created:"2026-01-21",regression:false},
+  {key:"OP-11320",summary:"Needs refinement: BE: Optum: Member Enrolled in Duplicate stride targets",assignee:"Nitish Reddy",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-01-10",regression:false},
+  {key:"OP-11370",summary:"Configure Web Vitals Dashboard once browser monitoring is deployed in PROD",assignee:"James White",type:"Task",priority:"Medium-P2",status:"Ready For QA",created:"2026-02-04",regression:false},
+  {key:"OP-11384",summary:"Inferences - InTouch Automation",assignee:"Nitish Reddy",type:"Task",priority:"Medium-P2",status:"In Progress",created:"2026-02-06",regression:false},
+  {key:"OP-11389",summary:"Web: Setup SEO meta content",assignee:"John Hull",type:"Story",priority:"Medium-P2",status:"Blocked",created:"2026-02-10",regression:false},
+  {key:"OP-11391",summary:"Editable Stride: Reporting",assignee:"Pinku Borah",type:"Story",priority:"Medium-P2",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11392",summary:"Onboard the new stride goal Mongo table",assignee:"Paul Kelley",type:"Task",priority:"Medium-P2",status:"Duplicate",created:"2026-02-10",regression:false},
+  {key:"OP-11393",summary:"Update the stride goal resolution logic to use point-in-time data",assignee:"Pinku Borah",type:"Story",priority:"Medium-P2",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11394",summary:"Ensure historical reports remain immutable",assignee:"Pinku Borah",type:"Story",priority:"Medium-P2",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11397",summary:"Editable Stride: Data Migration - write script to populate mongo db",assignee:"Brendan Murphy",type:"Task",priority:"Medium-P2",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11398",summary:"Editable Stride: EDG and platform services",assignee:"Pinku Borah",type:"Story",priority:"High-P1",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11401",summary:"Migrate existing customer stride goals into the new Mongo table AND Backfill app",assignee:"Nitish Reddy",type:"Story",priority:"High-P1",status:"Defer",created:"2026-02-10",regression:false},
+  {key:"OP-11403",summary:"Validate parity between legacy and new systems post-migration",assignee:"Unassigned",type:"Task",priority:"Medium-P2",status:"To Do",created:"2026-02-10",regression:false},
+  {key:"OP-11404",summary:"Update EDG NEO APIs to hydrate pointInTimeStrideGoal",assignee:"Nitish Reddy",type:"Story",priority:"Medium-P2",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11405",summary:"Ensure hydration logic executes before rule evaluation",assignee:"Unassigned",type:"Task",priority:"Medium-P2",status:"Done",created:"2026-02-10",regression:false},
+  {key:"OP-11411",summary:"Needs refinement: Globalize Survey Content via new healthSurveyQuestions schema",assignee:"Brendan Murphy",type:"Story",priority:"Medium-P2",status:"Design Pending",created:"2026-02-11",regression:false},
+  {key:"OP-11435",summary:"INC48479708: UHG - Stroke Star Challenge",assignee:"Richard Faulise",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-02-18",regression:false},
+  {key:"OP-11470",summary:"Amplitude events cleanup",assignee:"Paul Kelley",type:"Task",priority:"Medium-P2",status:"To Do",created:"2026-03-03",regression:false},
+  {key:"OP-11475",summary:"Kaiser Reimbursement: Add Address Confirmation Step to Reimbursement Flow",assignee:"Marcy Clothier",type:"Story",priority:"High-P1",status:"QA Done",created:"2026-03-04",regression:false},
+  {key:"OP-11478",summary:"Leaderboard Not Displaying for Team Challenge - Nationwide (1126)",assignee:"Nitish Reddy",type:"Bug",priority:"High-P1",status:"Blocked",created:"2026-03-05",regression:false},
+  {key:"OP-11486",summary:"Set BE engineering goals for Rick/Sridhar",assignee:"Brendan Murphy",type:"Task",priority:"Low-P3",status:"NOT REPRODUCIBLE",created:"2026-03-09",regression:false},
+  {key:"OP-11520",summary:"INC48809500: CN: 05612218 - Optum Engage - Wells Fargo and Company",assignee:"Paul Kelley",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-03-13",regression:false},
+  {key:"OP-11542",summary:"Issue with Physical activity exemption Attest",assignee:"Nitish Reddy",type:"Bug",priority:"High-P1",status:"Dev Done",created:"2026-03-19",regression:false},
+  {key:"OP-11577",summary:"Create critical path test set for member care",assignee:"Ankit Rathod",type:"Task",priority:"Medium-P2",status:"In Progress",created:"2026-03-25",regression:false},
+  {key:"OP-11578",summary:"Integrate Member Care Test Suite into CI/CD Pipeline",assignee:"Ankit Rathod",type:"Task",priority:"Medium-P2",status:"To Do",created:"2026-03-25",regression:false},
+  {key:"OP-11584",summary:"Web: Strict Transport Security (HSTS) Preload Requirement Not Met Due to Low Max-Age",assignee:"Unassigned",type:"Task",priority:"Medium-P2",status:"Dev Done",created:"2026-03-25",regression:false},
+  {key:"OP-11586",summary:"Web: Missing X-Frame-Options / CSP Frame-Ancestors Allows Clickjacking",assignee:"Unassigned",type:"Task",priority:"High-P1",status:"To Do",created:"2026-03-25",regression:false},
+  {key:"OP-11621",summary:"Optum: Health Survey Responses missing in Mongo",assignee:"Alexander Hoover",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-03-19",regression:false},
+  {key:"OP-11626",summary:"FE: Missions - progress bar percentage rounding edge case",assignee:"Mallikarjun Saravandi",type:"Bug",priority:"Medium-P2",status:"To Do",created:"2026-04-09",regression:false,reporter:"Marcy Clothier"},
+  {key:"OP-11627",summary:"BE: Stride API - missing pagination on history endpoint",assignee:"Rohit Jaiswal",type:"Bug",priority:"Medium-P2",status:"In Progress",created:"2026-04-09",regression:false},
+  {key:"OP-11628",summary:"Web: Challenge detail page crashes on empty leaderboard",assignee:"Cici Woolf",type:"Bug",priority:"High-P1",status:"To Do",created:"2026-04-10",regression:false,reporter:"Cam Neely"},
+  {key:"OP-11629",summary:"Mobile: Push notification deep link broken on cold start",assignee:"Sameer Kumar",type:"Bug",priority:"High-P1",status:"Blocked",created:"2026-04-10",regression:false},
+  {key:"OP-11630",summary:"BE: Activity sync duplicate event prevention",assignee:"Alexander Hoover",type:"Story",priority:"Medium-P2",status:"In Progress",created:"2026-04-11",regression:false},
+  {key:"OP-11631",summary:"QA: Automate gift card redemption happy-path regression",assignee:"Bri Stevenski",type:"Task",priority:"Medium-P2",status:"In QA",created:"2026-04-11",regression:false,reporter:"Paul Kelley"},
+  {key:"OP-11632",summary:"FE: Onboarding step 3 - accessibility audit fixes",assignee:"Cam Neely",type:"Story",priority:"Medium-P2",status:"Ready For QA",created:"2026-04-12",regression:false},
 ];
 
 const STATUS_CFG={
@@ -190,11 +277,11 @@ function getOrigin(issue){
 }
 
 const MILESTONES=[
-  {date:"2026-04-01",label:"Sprint Start",color:"#34d399",icon:"🚀"},
+  {date:"2026-03-26",label:"Sprint Start",color:"#34d399",icon:"🚀"},
   {date:"2026-04-17",label:"Code Freeze",color:"#fbbf24",icon:"🧊"},
   {date:"2026-04-20",label:"SIT Begins",color:"#60a5fa",icon:"🔬"},
   {date:"2026-04-22",label:"SIT Ends",color:"#60a5fa",icon:"✅"},
-  {date:"2026-04-24",label:"Regression End",color:"#a78bfa",icon:"🔄"},
+  {date:"2026-04-23",label:"Sprint End",color:"#a78bfa",icon:"🏁"},
   {date:"2026-04-30",label:"Release",color:"#FF5A00",icon:"🎉"},
 ];
 
@@ -342,6 +429,206 @@ function AvgAgeChart({issues}){
   );
 }
 
+// ── Mid-Sprint Additions Chart — custom HTML tooltip, shows reporter + assignee per ticket
+function MidSprintChart({tickets}){
+  const canvasRef=useRef(null);
+  const chartRef=useRef(null);
+  const tooltipRef=useRef(null);
+
+  const PALETTE=["#FF5A00","#a78bfa","#34d399","#60a5fa","#f472b6","#fbbf24","#38bdf8","#f87171","#fb923c","#818cf8","#4ade80","#e879f9"];
+
+  const {sortedDates,assignees,byDateAssignee,ticketsByDate}=useMemo(()=>{
+    const dates=new Set();
+    const asgs=new Set();
+    const byDA={};
+    const byD={};
+    tickets.forEach(t=>{
+      dates.add(t.created);
+      asgs.add(t.assignee);
+      const k=t.created+"||"+t.assignee;
+      byDA[k]=(byDA[k]||0)+1;
+      if(!byD[t.created]) byD[t.created]=[];
+      byD[t.created].push(t);
+    });
+    return{
+      sortedDates:[...dates].sort(),
+      assignees:[...asgs].sort(),
+      byDateAssignee:byDA,
+      ticketsByDate:byD,
+    };
+  },[tickets]);
+
+  useEffect(()=>{
+    if(!canvasRef.current||!sortedDates.length) return;
+    if(chartRef.current) chartRef.current.destroy();
+
+    const datasets=assignees.map((a,idx)=>({
+      label:a,
+      data:sortedDates.map(d=>byDateAssignee[d+"||"+a]||0),
+      backgroundColor:PALETTE[idx%PALETTE.length]+"bb",
+      borderColor:PALETTE[idx%PALETTE.length],
+      borderWidth:1,
+      borderRadius:4,
+    }));
+
+    // Custom external tooltip function
+    const externalTooltip=(context)=>{
+      const {chart,tooltip}=context;
+      const tooltipEl=tooltipRef.current;
+      if(!tooltipEl) return;
+
+      if(tooltip.opacity===0){tooltipEl.style.display="none";return;}
+
+      const dateIdx=tooltip.dataPoints[0].dataIndex;
+      const dateStr=sortedDates[dateIdx];
+      const dayTickets=ticketsByDate[dateStr]||[];
+
+      let html=`<div style="font-size:11px;font-weight:700;color:#FF5A00;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,90,0,0.3)">📅 ${fmtDate(dateStr)} — ${dayTickets.length} ticket${dayTickets.length!==1?"s":""} added</div>`;
+
+      dayTickets.forEach(t=>{
+        const aIdx=assignees.indexOf(t.assignee);
+        const ac=PALETTE[aIdx%PALETTE.length];
+        const reporter=REPORTER_MAP[t.key]||"—";
+        const sc=STATUS_CFG[t.status]||{c:"#94a3b8"};
+        html+=`<div style="margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.06)">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <span style="color:#FF5A00;font-weight:700;font-size:11px">${t.key}</span>
+            <span style="background:${sc.c}22;color:${sc.c};font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;border:1px solid ${sc.c}44">${t.status}</span>
+          </div>
+          <div style="color:rgba(226,232,240,0.85);font-size:11px;margin-bottom:5px;line-height:1.4">${t.summary.length>65?t.summary.slice(0,65)+"…":t.summary}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <span style="font-size:10px;color:rgba(226,232,240,0.5)">👤 Assigned: <span style="color:${ac};font-weight:600">${t.assignee}</span></span>
+            <span style="font-size:10px;color:rgba(226,232,240,0.5)">✍️ Reported by: <span style="color:rgba(226,232,240,0.8);font-weight:600">${reporter}</span></span>
+          </div>
+        </div>`;
+      });
+
+      tooltipEl.innerHTML=html;
+
+      const {offsetLeft:posX,offsetTop:posY}=chart.canvas;
+      const canvasRect=chart.canvas.getBoundingClientRect();
+      const containerRect=chart.canvas.parentElement.parentElement.getBoundingClientRect();
+
+      let left=posX+tooltip.caretX+12;
+      let top=posY+tooltip.caretY-20;
+
+      // Flip left if tooltip would overflow
+      if(tooltip.caretX > canvasRect.width/2){
+        left=posX+tooltip.caretX-tooltipEl.offsetWidth-12;
+      }
+
+      tooltipEl.style.display="block";
+      tooltipEl.style.left=left+"px";
+      tooltipEl.style.top=Math.max(0,top)+"px";
+    };
+
+    chartRef.current=new Chart(canvasRef.current,{
+      type:"bar",
+      data:{labels:sortedDates.map(fmtDate),datasets},
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{enabled:false,external:externalTooltip},
+        },
+        scales:{
+          x:{ticks:{color:"rgba(226,232,240,0.6)",font:{size:11},autoSkip:false,maxRotation:30},grid:{color:"rgba(255,255,255,0.04)"},border:{color:"rgba(255,255,255,0.05)"}},
+          y:{beginAtZero:true,ticks:{color:"rgba(226,232,240,0.6)",font:{size:11},stepSize:1},grid:{color:"rgba(255,255,255,0.05)"},border:{color:"rgba(255,255,255,0.05)"}},
+        },
+        onHover:(e,elements)=>{
+          if(e.native) e.native.target.style.cursor=elements.length?"pointer":"default";
+        }
+      }
+    });
+    return()=>{
+      if(chartRef.current)chartRef.current.destroy();
+      if(tooltipRef.current) tooltipRef.current.style.display="none";
+    };
+  },[sortedDates,assignees,byDateAssignee,ticketsByDate]);
+
+  const sorted=[...tickets].sort((a,b)=>a.created.localeCompare(b.created));
+
+  return(
+    <div>
+      {/* Assignee colour legend */}
+      <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:12}}>
+        {assignees.map((a,idx)=>(
+          <span key={a} style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,color:"rgba(226,232,240,0.7)",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:20,padding:"3px 10px"}}>
+            <span style={{width:8,height:8,borderRadius:"50%",background:PALETTE[idx%PALETTE.length],display:"inline-block",flexShrink:0}}/>
+            {a}
+          </span>
+        ))}
+      </div>
+
+      {/* Chart + custom tooltip container */}
+      <div style={{position:"relative",height:240,marginBottom:20}}>
+        <canvas ref={canvasRef} role="img" aria-label="Grouped bar chart of mid-sprint ticket additions by date and assignee"/>
+        {/* Custom tooltip */}
+        <div ref={tooltipRef} style={{
+          display:"none",position:"absolute",pointerEvents:"none",zIndex:999,
+          background:"rgba(10,10,18,0.97)",border:"1px solid rgba(255,90,0,0.4)",
+          borderRadius:10,padding:"12px 14px",minWidth:300,maxWidth:380,
+          boxShadow:"0 8px 32px rgba(0,0,0,0.6)",fontSize:12,color:"#e2e8f0",
+          lineHeight:"1.5",transition:"opacity 0.1s",
+        }}/>
+      </div>
+
+      {/* Detail table */}
+      <div style={{borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:14}}>
+        <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginBottom:10,fontWeight:600,letterSpacing:1}}>TICKET DETAIL</div>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr style={{borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+                {["Date Added","Ticket","Summary","Reported by","Assigned To","Status"].map(h=>(
+                  <th key={h} style={{padding:"7px 12px",textAlign:"left",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:1,color:"rgba(255,255,255,0.3)",whiteSpace:"nowrap"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((t,idx)=>{
+                const aIdx=assignees.indexOf(t.assignee);
+                const ac=PALETTE[aIdx%PALETTE.length];
+                const cfg=STATUS_CFG[t.status]||{c:"#94a3b8",bg:"rgba(148,163,184,0.15)"};
+                const reporter=REPORTER_MAP[t.key]||"—";
+                return(
+                  <tr key={t.key}
+                    style={{borderBottom:"1px solid rgba(255,255,255,0.04)",background:idx%2===0?"transparent":"rgba(255,255,255,0.015)"}}
+                    onMouseEnter={e=>e.currentTarget.style.background="rgba(255,90,0,0.06)"}
+                    onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"transparent":"rgba(255,255,255,0.015)"}>
+                    <td style={{padding:"8px 12px",whiteSpace:"nowrap"}}>
+                      <span style={{background:"rgba(251,191,36,0.12)",color:"#fbbf24",padding:"2px 8px",borderRadius:6,fontSize:11,fontWeight:700,border:"1px solid rgba(251,191,36,0.25)"}}>{fmtDate(t.created)}</span>
+                    </td>
+                    <td style={{padding:"8px 12px",whiteSpace:"nowrap"}}>
+                      <a href={"https://capillarytech.atlassian.net/browse/"+t.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{t.key}</a>
+                    </td>
+                    <td style={{padding:"8px 12px",color:"#cbd5e1",maxWidth:280}}>{t.summary}</td>
+                    <td style={{padding:"8px 12px",whiteSpace:"nowrap"}}>
+                      <span style={{display:"inline-flex",alignItems:"center",gap:5,background:"rgba(255,255,255,0.06)",color:"rgba(226,232,240,0.8)",padding:"2px 8px",borderRadius:20,fontSize:11,border:"1px solid rgba(255,255,255,0.1)"}}>
+                        ✍️ {reporter}
+                      </span>
+                    </td>
+                    <td style={{padding:"8px 12px",whiteSpace:"nowrap"}}>
+                      <span style={{display:"inline-flex",alignItems:"center",gap:6,background:ac+"18",color:ac,padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,border:`1px solid ${ac}35`}}>
+                        <span style={{width:6,height:6,borderRadius:"50%",background:ac,flexShrink:0}}/>
+                        {t.assignee}
+                      </span>
+                    </td>
+                    <td style={{padding:"8px 12px",whiteSpace:"nowrap"}}>
+                      <span style={{background:cfg.bg,color:cfg.c,padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:700,border:`1px solid ${cfg.c}40`}}>{t.status}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App(){
   const [tab,setTab]=useState("tickets");
   const [search,setSearch]=useState("");
@@ -395,8 +682,7 @@ function App(){
   const blockedCnt=ISSUES.filter(i=>i.status==="Blocked").length;
   const donePct=Math.round((completedSP/COMMITTED_SP)*100);
 
-  const sprintStart2=new Date("2026-04-01"),sprintEnd=new Date("2026-04-30");
-  const sprintPct=Math.min(100,Math.round(((TODAY-sprintStart2)/(sprintEnd-sprintStart2))*100));
+  const sprintPct=Math.min(100,Math.round(((TODAY-SPRINT_START)/(SPRINT_END-SPRINT_START))*100));
 
   const TABS=[
     {key:"tickets",label:"All Tickets",icon:"🎫"},
@@ -415,7 +701,7 @@ function App(){
           <div style={{background:"#FF5A00",borderRadius:10,width:38,height:38,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:900,color:"#fff",letterSpacing:-1}}>OP</div>
           <div>
             <div style={{fontSize:16,fontWeight:800,color:"#fff",letterSpacing:"-0.3px"}}>Optum Engineering</div>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Sprint 52 · Apr 1 – Apr 30, 2026</div>
+            <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>Sprint 52 · 26th Mar – 23rd Apr, 2026</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:20}}>
@@ -436,7 +722,7 @@ function App(){
               </div>
             )}
           </div>
-          <div style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Synced Apr 9, 2026</div>
+          <div style={{fontSize:12,color:"rgba(255,255,255,0.4)"}}>Synced 13th Apr, 2026</div>
         </div>
       </div>
 
@@ -450,7 +736,7 @@ function App(){
               {i>0&&<div style={{width:20,height:1,background:"rgba(255,255,255,0.15)",flexShrink:0}}/>}
               <div style={{fontSize:12,color:m.color,fontWeight:isToday?800:600}}>
                 <span style={{marginRight:4}}>{m.icon}</span>{m.label}
-                <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginLeft:6}}>{m.date.slice(5)}</span>
+                <span style={{fontSize:10,color:"rgba(255,255,255,0.4)",marginLeft:6}}>{fmtDate(m.date)}</span>
               </div>
             </div>
           );
@@ -530,7 +816,7 @@ function App(){
                 <span style={{fontSize:11,fontWeight:700,color:"#f87171",textTransform:"uppercase",letterSpacing:1}}>Rolled Over</span>
               </div>
               <div style={{fontSize:36,fontWeight:800,color:"#f87171",letterSpacing:"-1px",lineHeight:1}}>{rolledOver.length}</div>
-              <div style={{fontSize:11,color:"rgba(248,113,113,0.6)",marginTop:4}}>Created before Apr 1</div>
+              <div style={{fontSize:11,color:"rgba(248,113,113,0.6)",marginTop:4}}>Created before 26th Mar</div>
               <div style={{marginTop:10,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
                 <div style={{width:`${Math.round(rolledOver.length/total*100)}%`,height:"100%",background:"#f87171",borderRadius:2}}/>
               </div>
@@ -543,7 +829,7 @@ function App(){
                 <span style={{fontSize:11,fontWeight:700,color:"#34d399",textTransform:"uppercase",letterSpacing:1}}>Sprint Start</span>
               </div>
               <div style={{fontSize:36,fontWeight:800,color:"#34d399",letterSpacing:"-1px",lineHeight:1}}>{sprintStartTickets.length}</div>
-              <div style={{fontSize:11,color:"rgba(52,211,153,0.6)",marginTop:4}}>Added on Apr 1</div>
+              <div style={{fontSize:11,color:"rgba(52,211,153,0.6)",marginTop:4}}>Added on 26th Mar</div>
               <div style={{marginTop:10,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
                 <div style={{width:`${Math.round(sprintStartTickets.length/total*100)}%`,height:"100%",background:"#34d399",borderRadius:2}}/>
               </div>
@@ -556,7 +842,7 @@ function App(){
                 <span style={{fontSize:11,fontWeight:700,color:"#fbbf24",textTransform:"uppercase",letterSpacing:1}}>Added Mid-Sprint</span>
               </div>
               <div style={{fontSize:36,fontWeight:800,color:"#fbbf24",letterSpacing:"-1px",lineHeight:1}}>{midSprintAdded.length}</div>
-              <div style={{fontSize:11,color:"rgba(251,191,36,0.6)",marginTop:4}}>Created after Apr 1</div>
+              <div style={{fontSize:11,color:"rgba(251,191,36,0.6)",marginTop:4}}>Created after 26th Mar</div>
               <div style={{marginTop:10,height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden"}}>
                 <div style={{width:`${Math.round(midSprintAdded.length/total*100)}%`,height:"100%",background:"#fbbf24",borderRadius:2}}/>
               </div>
@@ -565,18 +851,9 @@ function App(){
           </div>
           {/* Mid-sprint breakdown by date */}
           {midSprintAdded.length>0&&(
-            <div style={{marginTop:14,borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:12}}>
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginBottom:8,fontWeight:600}}>MID-SPRINT ADDITIONS BY DATE</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                {Object.entries(
-                  midSprintAdded.reduce((m,i)=>{m[i.created]=(m[i.created]||0)+1;return m;},{})
-                ).sort(([a],[b])=>a.localeCompare(b)).map(([date,cnt])=>(
-                  <div key={date} style={{background:"rgba(251,191,36,0.1)",border:"1px solid rgba(251,191,36,0.2)",borderRadius:8,padding:"4px 10px",fontSize:11,color:"#fbbf24"}}>
-                    <span style={{fontWeight:700}}>{date.slice(5)}</span>
-                    <span style={{marginLeft:5,opacity:0.7}}>+{cnt}</span>
-                  </div>
-                ))}
-              </div>
+            <div style={{marginTop:14,borderTop:"1px solid rgba(255,255,255,0.06)",paddingTop:14}}>
+              <div style={{fontSize:11,color:"rgba(255,255,255,0.35)",marginBottom:12,fontWeight:600,letterSpacing:1}}>MID-SPRINT ADDITIONS BY DATE</div>
+              <MidSprintChart tickets={midSprintAdded}/>
             </div>
           )}
         </div>
@@ -640,7 +917,7 @@ function App(){
                           <span style={{fontSize:12,color:"rgba(255,255,255,0.5)"}}>{i.priority}</span>
                         </td>
                         <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><StatusPill s={i.status}/></td>
-                        <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:12}}>{i.created}</td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:12}}>{fmtDate(i.created)}</td>
                         <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}>
                           <span style={{background:originCfg.bg,color:originCfg.c,padding:"3px 8px",borderRadius:8,fontSize:10,fontWeight:700,border:`1px solid ${originCfg.c}30`}}>{originCfg.label}</span>
                         </td>
@@ -741,7 +1018,7 @@ function App(){
                           <div key={t.key} style={{background:"rgba(244,114,182,0.07)",border:"1px solid rgba(244,114,182,0.15)",borderRadius:8,padding:"10px 14px",marginBottom:8}}>
                             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                               <a href={"https://capillarytech.atlassian.net/browse/"+t.key} target="_blank" rel="noreferrer" style={{color:"#FF5A00",fontWeight:700,fontSize:12}}>{t.key}</a>
-                              <span style={{fontSize:10,color:"rgba(255,255,255,0.3)"}}>since {t.created}</span>
+                              <span style={{fontSize:10,color:"rgba(255,255,255,0.3)"}}>since {fmtDate(t.created)}</span>
                             </div>
                             <div style={{fontSize:12,color:"#cbd5e1"}}>{t.summary}</div>
                           </div>
@@ -792,7 +1069,7 @@ function App(){
                         <td style={{padding:"10px 14px",maxWidth:280,color:"#cbd5e1"}}>{i.summary}</td>
                         <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><span style={{background:"rgba(255,90,0,0.1)",color:"#fb923c",padding:"2px 8px",borderRadius:20,fontSize:11,fontWeight:600}}>{i.assignee}</span></td>
                         <td style={{padding:"10px 14px",whiteSpace:"nowrap"}}><StatusPill s={i.status}/></td>
-                        <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:11}}>{assignDate}</td>
+                        <td style={{padding:"10px 14px",whiteSpace:"nowrap",color:"rgba(255,255,255,0.3)",fontSize:11}}>{fmtDate(assignDate)}</td>
                         <td style={{padding:"10px 14px",minWidth:130}}>
                           <div style={{display:"flex",alignItems:"center",gap:8}}>
                             <div style={{flex:1,height:4,background:"rgba(255,255,255,0.06)",borderRadius:2,overflow:"hidden",minWidth:50}}>
