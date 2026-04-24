@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Optum Engineering — Sprint 52 Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: Inter, system-ui, sans-serif; background: #f8fafc; }</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
+const TODAY = new Date("2026-04-09");
+
+const ISSUES = [
+  { key:"OP-11625", summary:"Cleanup My Gift cards images", assignee:"Cam Neely", type:"Bug", priority:"Medium-P2", status:"Ready For QA", created:"2026-04-08" },
+  { key:"OP-11624", summary:"Expiring gift card warning not displaying after activity runout ends", assignee:"Cici Woolf", type:"Bug", priority:"High-P1", status:"Dev Done", created:"2026-04-07" },
+  { key:"OP-11623", summary:"Android: Regression: Offers Text", assignee:"Unassigned", type:"Bug", priority:"Medium-P2", status:"To Do", created:"2026-04-07" },
+  { key:"OP-11620", summary:"Deploy Sanity schema to non-production datasets", assignee:"Alexander Hoover", type:"Task", priority:"Medium-P2", status:"To Do", created:"2026-04-06" },
+  { key:"OP-11618", summary:"Save and Proceed not navigating to mission selection", assignee:"Marcy Clothier", type:"Story", priority:"High-P1", status:"QA Done", created:"2026-04-06" },
+  { key:"OP-11617", summary:"Mission progress not persisting after check-in", assignee:"Alexander Hoover", type:"Story", priority:"High-P1", status:"In Progress", created:"2026-04-06" },
+  { key:"OP-11615", summary:"Onboarding: Logos Not right", assignee:"Sameer Kumar", type:"Bug", priority:"High-P1", status:"In Progress", created:"2026-04-03" },
+  { key:"OP-11614", summary:"Missions not functioning - unable to learn more or join", assignee:"Marcy Clothier", type:"Bug", priority:"High-P1", status:"QA Done", created:"2026-04-02" },
+  { key:"OP-11613", summary:"FE: Move language in footer near app store buttons", assignee:"Mallikarjun Saravandi", type:"Story", priority:"Medium-P2", status:"To Do", created:"2026-04-02" },
+  { key:"OP-11612", summary:"create intouch config for chase in 1126, merge and prod env", assignee:"Rohit Jaiswal", type:"Task", priority:"Medium-P2", status:"Ready For QA", created:"2026-04-01" },
+  { key:"OP-11611", summary:"create intouch config for bcbs in 1126, merge and prod env", assignee:"Rohit Jaiswal", type:"Task", priority:"Medium-P2", status:"Ready For QA", created:"2026-04-01" },
+  { key:"OP-11610", summary:"Team Challenges: Back arrow not working and leaderboard displaying avg not sum", assignee:"Cici Woolf", type:"Bug", priority:"High-P1", status:"To Do", created:"2026-04-01" },
+  { key:"OP-11609", summary:"Web: Homepage shifting", assignee:"Cici Woolf", type:"Bug", priority:"High-P1", status:"To Do", created:"2026-03-31" },
+  { key:"OP-11608", summary:"Mobile: Homepage layout jank / shifting", assignee:"Cici Woolf", type:"Bug", priority:"High-P1", status:"In Progress", created:"2026-03-31" },
+  { key:"OP-11607", summary:"FS: Add View My Access Code CTA on gift card redemption screen", assignee:"Cam Neely", type:"Story", priority:"Medium-P2", status:"Dev Done", created:"2026-03-28" },
+  { key:"OP-11605", summary:"Android: Mobile web: Offers not scrollable", assignee:"John Hull", type:"Bug", priority:"Medium-P2", status:"Ready For QA", created:"2026-03-27" },
+  { key:"OP-11602", summary:"FS: Explore Page: Cannot find Mission Banner/Hyperlink", assignee:"Mallikarjun Saravandi", type:"Story", priority:"Medium-P2", status:"Blocked", created:"2026-03-27" },
+  { key:"OP-11601", summary:"FE: Wrong stride join date", assignee:"Marcy Clothier", type:"Bug", priority:"High-P1", status:"QA Done", created:"2026-03-26" },
+  { key:"OP-11600", summary:"Help Center: Window Sizing Iframe Issue", assignee:"Marcy Clothier", type:"Bug", priority:"Medium-P2", status:"Ready For QA", created:"2026-03-26" },
+  { key:"OP-11599", summary:"Hide loading state when data already present - explore page", assignee:"Marcy Clothier", type:"Story", priority:"Medium-P2", status:"QA Done", created:"2026-03-26" },
+  { key:"OP-11598", summary:"Web: Exposure of Internal Domain and Environment Information in HTTP Response", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-26" },
+  { key:"OP-11597", summary:"Web: Information Disclosure via Publicly Accessible Environment File", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-26" },
+  { key:"OP-11596", summary:"Web: WAF Bypass via Encoding Allows Access to Protected Endpoints", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-26" },
+  { key:"OP-11585", summary:"Improve LCP on Home Page with Hero Banner/Spotlight Items", assignee:"Rashmi BR", type:"Story", priority:"Medium-P2", status:"In QA", created:"2026-03-25" },
+  { key:"OP-11582", summary:"Web: Internal Server Information Disclosure via S3 Error Page", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-25" },
+  { key:"OP-11579", summary:"Web: Improper Input Validation Allows Null Byte Injection", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-25" },
+  { key:"OP-11576", summary:"Clean CardComponent to make it new standard as activities cards", assignee:"Marcy Clothier", type:"Sub-task", priority:"Medium-P2", status:"QA Done", created:"2026-03-25" },
+  { key:"OP-11573", summary:"Mobile: OIDC Session Cookie SameSite Attribute Misconfiguration", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-24" },
+  { key:"OP-11572", summary:"Mobile: Improper Input Validation Allows Null Byte Injection", assignee:"John Hull", type:"Task", priority:"High-P1", status:"Blocked", created:"2026-03-24" },
+  { key:"OP-11564", summary:"Consolidate and organize rewards cards", assignee:"Marcy Clothier", type:"Sub-task", priority:"Medium-P2", status:"QA Done", created:"2026-03-24" },
+  { key:"OP-11563", summary:"Unify Buttons to single base component", assignee:"Marcy Clothier", type:"Sub-task", priority:"Medium-P2", status:"QA Done", created:"2026-03-24" },
+  { key:"OP-11562", summary:"Unify Cards to single base component", assignee:"Marcy Clothier", type:"Sub-task", priority:"Medium-P2", status:"QA Done", created:"2026-03-24" },
+  { key:"OP-11561", summary:"Unify Dividers to single component", assignee:"Marcy Clothier", type:"Sub-task", priority:"Medium-P2", status:"QA Done", created:"2026-03-24" },
+  { key:"OP-11560", summary:"INC49089194: Application is behaving poorly on Android S24", assignee:"John Hull", type:"Bug", priority:"High-P1", status:"In Progress", created:"2026-03-24" },
+  { key:"OP-11559", summary:"Prod - Missions showing complete but no associated completion", assignee:"Rashmi BR", type:"Bug", priority:"High-P1", status:"Ready For QA", created:"2026-03-24" },
+  { key:"OP-11558", summary:"user unable to do Stride Enrollment 2026 - Prod", assignee:"Paul Kelley", type:"Bug", priority:"Highest-P0", status:"Done", created:"2026-03-23" },
+  { key:"OP-11557", summary:"BE: Highest bidder in Auction has reward in Outbid status", assignee:"Alexander Hoover", type:"Bug", priority:"High-P1", status:"Dev Done", created:"2026-03-23" },
+  { key:"OP-11556", summary:"Giftcard Balances - Followup", assignee:"Cici Woolf", type:"Story", priority:"Medium-P2", status:"Ready For QA", created:"2026-03-23" },
+  { key:"OP-11554", summary:"BE: New Stage Only: Missions: Progress not persisting", assignee:"Alexander Hoover", type:"Bug", priority:"High-P1", status:"Defer", created:"2026-03-21" },
+  { key:"OP-11553", summary:"FS: Missions/challenges Rounding Problems", assignee:"Cam Neely", type:"Bug", priority:"Medium-P2", status:"Dev Done", created:"2026-03-21" },
+  { key:"OP-11549", summary:"Missions allowing user to quit and re-enroll and gain points multiple times", assignee:"Cici Woolf", type:"Bug", priority:"High-P1", status:"Blocked", created:"2026-03-20" },
+  { key:"OP-11548", summary:"AI storybook Project", assignee:"Marcy Clothier", type:"Task", priority:"Medium-P2", status:"QA Done", created:"2026-03-20" },
+  { key:"OP-11547", summary:"Mobile: Bottom Tool bar, change to blue", assignee:"Cici Woolf", type:"Bug", priority:"Medium-P2", status:"To Do", created:"2026-03-20" },
+  { key:"OP-11543", summary:"B2B apis: Activity completion date", assignee:"Rashmi BR", type:"Bug", priority:"Medium-P2", status:"Done", created:"2026-03-19" },
+  { key:"OP-11539", summary:"Mobile Web: IOS: Regression - white space between nav bar and app navigation tabs", assignee:"Sameer Kumar", type:"Bug", priority:"Medium-P2", status:"Defer", created:"2026-03-19" },
+  { key:"OP-11530", summary:"Web: Make toast message Centered on Screen", assignee:"Marcy Clothier", type:"Story", priority:"Low-P3", status:"QA Done", created:"2026-03-17" },
+  { key:"OP-11529", summary:"Pt 2: Cards and Dividers - Increase Border and Separator Contrast", assignee:"Sameer Kumar", type:"Story", priority:"Medium-P2", status:"Dev Done", created:"2026-03-17" },
+  { key:"OP-11526", summary:"FS: Add experation flag to Top Pics", assignee:"Sameer Kumar", type:"Story", priority:"Medium-P2", status:"Dev Done", created:"2026-03-17" },
+  { key:"OP-11525", summary:"Neo: Member status is updated to ACTIVE when in suspended or deactivated status", assignee:"Cici Woolf", type:"Bug", priority:"Medium-P2", status:"In Progress", created:"2026-03-17" },
+  { key:"OP-11524", summary:"Figuring out data extract and migration stuff", assignee:"Marcy Clothier", type:"Story", priority:"Medium-P2", status:"QA Done", created:"2026-03-17" },
+  { key:"OP-11522", summary:"Sanity studio: Split challenges into Active, Past", assignee:"Ankit Rathod", type:"Story", priority:"Medium-P2", status:"QA Done", created:"2026-03-14" },
+  { key:"OP-11515", summary:"Test User Login (Phase 1)", assignee:"Cici Woolf", type:"Task", priority:"Medium-P2", status:"Ready For QA", created:"2026-03-12" },
+  { key:"OP-11514", summary:"Issue in fetching details in external Activity ID - Lumen", assignee:"Ankit Rathod", type:"Task", priority:"Medium-P2", status:"QA Done", created:"2026-03-12" },
+  { key:"OP-11499", summary:"Create critical path test set for web tests", assignee:"Rashmi BR", type:"Task", priority:"Medium-P2", status:"In Progress", created:"2026-03-10" },
+  { key:"OP-11498", summary:"Create critical path test set for API tests", assignee:"Bri Stevenski", type:"Task", priority:"Medium-P2", status:"In Progress", created:"2026-03-10" },
+  { key:"OP-11496", summary:"Create and publish user shared library package", assignee:"Marcy Clothier", type:"Task", priority:"Medium-P2", status:"In Progress", created:"2026-03-10" },
+  { key:"OP-11486", summary:"Set BE engineering goals for Rick/Sridhar", assignee:"Brendan Murphy", type:"Task", priority:"Medium-P2", status:"NOT REPRODUCIBLE", created:"2026-03-09" },
+  { key:"OP-11478", summary:"Leaderboard Not Displaying for Team Challenge - Nationwide (1126)", assignee:"Nitish Reddy", type:"Bug", priority:"Medium-P2", status:"Blocked", created:"2026-03-05" },
+  { key:"OP-11475", summary:"Kaiser Reimbursement: Add Address Confirmation Step to Reimbursement Flow", assignee:"Cici Woolf", type:"Story", priority:"High-P1", status:"Ready For QA", created:"2026-03-04" },
+  { key:"OP-11470", summary:"Amplitude events cleanup", assignee:"Paul Kelley", type:"Story", priority:"Medium-P2", status:"To Do", created:"2026-03-03" },
+  { key:"OP-11435", summary:"INC48479708: UHG - Stroke Star Challenge", assignee:"Richard Faulise", type:"Bug", priority:"Medium-P2", status:"To Do", created:"2026-02-18" },
+  { key:"OP-11428", summary:"Web: Gift Card Images are spilling over", assignee:"Ankit Rathod", type:"Bug", priority:"Low-P3", status:"QA Done", created:"2026-02-18" },
+  { key:"OP-11414", summary:"BE: Completed rewardable activities should display reward amount even if max cap reached", assignee:"Alexander Hoover", type:"Story", priority:"Medium-P2", status:"Dev Done", created:"2026-02-12" },
+  { key:"OP-11411", summary:"Globalize Survey Content via new healthSurveyQuestions schema", assignee:"Brendan Murphy", type:"Story", priority:"High-P1", status:"Design Pending", created:"2026-02-11" },
+  { key:"OP-11405", summary:"Ensure hydration logic executes before rule evaluation", assignee:"Unassigned", type:"Sub-task", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11404", summary:"Update EDG NEO APIs to hydrate pointInTimeStrideGoal", assignee:"Nitish Reddy", type:"Sub-task", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11403", summary:"Validate parity between legacy and new systems post-migration", assignee:"Unassigned", type:"Sub-task", priority:"Medium-P2", status:"To Do", created:"2026-02-10" },
+  { key:"OP-11401", summary:"Migrate existing customer stride goals into the new Mongo table", assignee:"Nitish Reddy", type:"Sub-task", priority:"Medium-P2", status:"Defer", created:"2026-02-10" },
+  { key:"OP-11398", summary:"Editable Stride: EDG and platform services", assignee:"Pinku Borah", type:"Story", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11397", summary:"Editable Stride: Data Migration - write script to populate mongo db", assignee:"Brendan Murphy", type:"Story", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11394", summary:"Ensure historical reports remain immutable", assignee:"Pinku Borah", type:"Sub-task", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11393", summary:"Update the stride goal resolution logic to use point-in-time data", assignee:"Pinku Borah", type:"Sub-task", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11392", summary:"Onboard the new stride goal Mongo table", assignee:"Paul Kelley", type:"Sub-task", priority:"Medium-P2", status:"Duplicate", created:"2026-02-10" },
+  { key:"OP-11391", summary:"Editable Stride: Reporting", assignee:"Pinku Borah", type:"Story", priority:"Medium-P2", status:"Done", created:"2026-02-10" },
+  { key:"OP-11389", summary:"Web: Setup SEO meta content", assignee:"John Hull", type:"Story", priority:"High-P1", status:"Blocked", created:"2026-02-10" },
+  { key:"OP-11370", summary:"Configure Web Vitals Dashboard once browser monitoring is deployed", assignee:"James White", type:"Task", priority:"High-P1", status:"Ready For QA", created:"2026-02-04" },
+  { key:"OP-11363", summary:"Redeem rewards UI refresh", assignee:"Marcy Clothier", type:"Story", priority:"High-P1", status:"In QA", created:"2026-02-03" },
+  { key:"OP-11362", summary:"Request to retrigger the Health survey 2026 responses in prod", assignee:"Brendan Murphy", type:"Task", priority:"High-P1", status:"Dev Done", created:"2026-02-03" },
+  { key:"OP-11347", summary:"FE: Add confirmation/notification for mission reset status", assignee:"Mallikarjun Saravandi", type:"Story", priority:"Medium-P2", status:"In Progress", created:"2026-01-30" },
+  { key:"OP-11338", summary:"FE: Add Entry Details to Auto enrolled sweeps in My Sweepstakes", assignee:"Rashmi BR", type:"Story", priority:"Medium-P2", status:"QA Done", created:"2026-01-27" },
+  { key:"OP-11320", summary:"BE: Optum: Member Enrolled in Duplicate stride targets", assignee:"Nitish Reddy", type:"Bug", priority:"High-P1", status:"To Do", created:"2026-01-10" },
+  { key:"OP-11304", summary:"Biometric targets as per the SF extract (3)", assignee:"Nitish Reddy", type:"Task", priority:"Medium-P2", status:"Defer", created:"2026-01-21" },
+  { key:"OP-11294", summary:"NotNull() rule missing for Biometric targets (2)", assignee:"Nitish Reddy", type:"Task", priority:"Medium-P2", status:"Defer", created:"2026-01-20" },
+  { key:"OP-11290", summary:"Promotion for the Alternate Activity (6)", assignee:"Rohit Jaiswal", type:"Task", priority:"Medium-P2", status:"In QA", created:"2026-01-20" },
+  { key:"OP-11289", summary:"Repeatable activities (Stride and gym-check in) (5)", assignee:"Rohit Jaiswal", type:"Task", priority:"Medium-P2", status:"In Progress", created:"2026-01-20" },
+  { key:"OP-11286", summary:"FE: Android: Hard to Navigate to Rewards", assignee:"Marcy Clothier", type:"Bug", priority:"Medium-P2", status:"QA Done", created:"2026-01-20" },
+  { key:"OP-11285", summary:"Getting Started Banner keeps appearing", assignee:"Cam Neely", type:"Bug", priority:"Medium-P2", status:"Blocked", created:"2026-01-20" },
+  { key:"OP-11272", summary:"Mission joined amplitude event is being triggered on error instead of on successful event", assignee:"Nitish Reddy", type:"Bug", priority:"High-P1", status:"To Do", created:"2026-01-15" },
+  { key:"OP-11269", summary:"Develop a solution where our FE local can use our BE Local", assignee:"Alexander Hoover", type:"Task", priority:"Medium-P2", status:"Dev Done", created:"2026-01-14" },
+  { key:"OP-11218", summary:"Health Survey: Stale FE after completing health survey", assignee:"Alexander Hoover", type:"Story", priority:"Medium-P2", status:"Dev Done", created:"2026-01-06" },
+  { key:"OP-11199", summary:"No History for completed events", assignee:"Christy Deena Mathew", type:"Bug", priority:"Medium-P2", status:"To Do", created:"2026-01-02" },
+  { key:"OP-11158", summary:"Texas Age Gate", assignee:"John Hull", type:"Story", priority:"Medium-P2", status:"Blocked", created:"2025-12-16" },
+  { key:"OP-11154", summary:"Shell Ticket: Health Survey Refactor Research", assignee:"Alexander Hoover", type:"Story", priority:"High-P1", status:"Dev Done", created:"2025-12-15" },
+  { key:"OP-11077", summary:"Employer Rewards History: Load more button should not be shown when no data", assignee:"Cam Neely", type:"Story", priority:"Medium-P2", status:"Blocked", created:"2025-12-04" },
+  { key:"OP-11040", summary:"Rewardable Activities - better user flow after completing activities", assignee:"jack.ready", type:"Bug", priority:"Medium-P2", status:"To Do", created:"2025-11-26" },
+  { key:"OP-10996", summary:"Spike - Refine BE for Mission Daily Progress Bar", assignee:"Brendan Murphy", type:"Story", priority:"Medium-P2", status:"To Do", created:"2025-11-20" },
+  { key:"OP-10940", summary:"Sanity: Replace StoreLocator Service with Sanity based Gyms Flow", assignee:"Cam Neely", type:"Story", priority:"High-P1", status:"In Progress", created:"2025-11-06" },
+  { key:"OP-10773", summary:"Optum: Health Survey - Data merge for users with EFID being merged", assignee:"Alexander Hoover", type:"Task", priority:"Medium-P2", status:"Blocked", created:"2025-10-01" },
+  { key:"OP-10758", summary:"Mobile Web: White bar while in missions", assignee:"John Hull", type:"Bug", priority:"Medium-P2", status:"In Progress", created:"2025-09-30" },
+  { key:"OP-10752", summary:"Mobile Web: Giftcard Redeem Now button", assignee:"jack.ready", type:"Bug", priority:"Medium-P2", status:"Blocked", created:"2025-09-29" },
+  { key:"OP-10669", summary:"Update Mongoose Version to 8.0 in preparation for Mongo DB Upgrade", assignee:"Brendan Murphy", type:"Story", priority:"Medium-P2", status:"Blocked", created:"2025-09-11" },
+];
+
+const STATUS_CFG = {
+  "To Do":          { c:"#4f8ef7", bg:"#e8f0fe" },
+  "In Progress":    { c:"#f59e0b", bg:"#fef3c7" },
+  "Dev Done":       { c:"#8b5cf6", bg:"#ede9fe" },
+  "In QA":          { c:"#ec4899", bg:"#fce7f3" },
+  "Ready For QA":   { c:"#0ea5e9", bg:"#e0f2fe" },
+  "QA Done":        { c:"#10b981", bg:"#d1fae5" },
+  "Blocked":        { c:"#ef4444", bg:"#fee2e2" },
+  "Done":           { c:"#059669", bg:"#d1fae5" },
+  "Defer":          { c:"#6b7280", bg:"#f3f4f6" },
+  "Design Pending": { c:"#d97706", bg:"#fef3c7" },
+  "NOT REPRODUCIBLE":{ c:"#6b7280", bg:"#f3f4f6" },
+  "Duplicate":      { c:"#6b7280", bg:"#f3f4f6" },
+};
+const TYPE_ICON = { Bug:"🐛", Story:"📖", Task:"✅", Epic:"⚡", "Sub-task":"🔗" };
+const PRIO_CLR = { "Highest-P0":"#7c3aed","High-P1":"#ef4444","Medium-P2":"#f59e0b","Low-P3":"#10b981" };
+const QA_TEAM = ["Rashmi BR","Marcy Clothier"];
+
+function daysDiff(from, to) {
+  return Math.round((to - new Date(from)) / 86400000);
+}
+function ageBadge(days) {
+  const bg = days > 30 ? "#fee2e2" : days > 14 ? "#fef3c7" : "#d1fae5";
+  const c  = days > 30 ? "#ef4444" : days > 14 ? "#f59e0b" : "#10b981";
+  return { bg, c };
+}
+
+const StatusBadge = ({ s }) => {
+  const cfg = STATUS_CFG[s] || { c:"#6b7280", bg:"#f3f4f6" };
+  return <span style={{ background:cfg.bg, color:cfg.c, padding:"2px 9px", borderRadius:10, fontSize:11, fontWeight:700, whiteSpace:"nowrap" }}>{s}</span>;
+};
+
+function App() {
+  const [tab, setTab] = useState("tickets");
+  const [search, setSearch] = useState("");
+  const [aFilter, setAFilter] = useState("All");
+  const [sFilter, setSFilter] = useState("All");
+
+  const assignees = useMemo(() => ["All",...Array.from(new Set(ISSUES.map(i=>i.assignee))).sort()],[]);
+  const statuses  = useMemo(() => ["All",...Array.from(new Set(ISSUES.map(i=>i.status))).sort()],[]);
+
+  const filtered = useMemo(() => ISSUES.filter(i => {
+    const ms = i.summary.toLowerCase().includes(search.toLowerCase()) || i.key.toLowerCase().includes(search.toLowerCase());
+    const ma = aFilter==="All" || i.assignee===aFilter;
+    const ms2 = sFilter==="All" || i.status===sFilter;
+    return ms && ma && ms2;
+  }),[search, aFilter, sFilter]);
+
+  // Dev Done per assignee
+  const devDone = useMemo(() => {
+    const m = {};
+    ISSUES.filter(i=>i.status==="Dev Done").forEach(i=>{
+      m[i.assignee] = (m[i.assignee]||[]);
+      m[i.assignee].push(i);
+    });
+    return Object.entries(m).sort((a,b)=>b[1].length-a[1].length);
+  },[]);
+
+  // QA team In QA tickets
+  const qaTickets = useMemo(() => {
+    const m = {};
+    QA_TEAM.forEach(qa => {
+      m[qa] = ISSUES.filter(i => i.assignee===qa && i.status==="In QA");
+    });
+    return m;
+  },[]);
+
+  // Stats
+  const total     = ISSUES.length;
+  const devDoneCnt= ISSUES.filter(i=>i.status==="Dev Done").length;
+  const inQACnt   = ISSUES.filter(i=>i.status==="In QA").length;
+  const blockedCnt= ISSUES.filter(i=>i.status==="Blocked").length;
+
+  const TABS = [
+    ["tickets","🎫 All Tickets"],
+    ["devdone","🔀 Dev Done & Merge Review"],
+    ["qa","🧪 QA Status"],
+    ["age","⏱ Ticket Age"],
+  ];
+
+  return (
+    <div style={{ minHeight:"100vh", paddingBottom:40 }}>
+      {/* HEADER */}
+      <div style={{ background:"#1A1A1A", color:"#fff", padding:"24px 32px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+          <span style={{ background:"#FF5A00", color:"#fff", fontSize:10, fontWeight:800, padding:"2px 10px", borderRadius:20, letterSpacing:1, textTransform:"uppercase" }}>Sprint 52</span>
+          <span style={{ background:"rgba(255,255,255,0.1)", color:"#fff", fontSize:10, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>Optum Engineering</span>
+        </div>
+        <div style={{ fontSize:22, fontWeight:800, marginTop:6 }}>Sprint 52 Engineering Dashboard</div>
+        <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)", marginTop:2 }}>Project: OP &middot; capillarytech.atlassian.net &middot; Synced Apr 9, 2026</div>
+        <div style={{ display:"flex", gap:12, marginTop:18, flexWrap:"wrap" }}>
+          {[["Total Tickets","🎫",total],["Dev Done","🔀",devDoneCnt],["In QA","🧪",inQACnt],["Blocked","🚫",blockedCnt]].map(([label,icon,val])=>(
+            <div key={label} style={{ background:"rgba(255,255,255,0.07)", border:"1px solid rgba(255,255,255,0.1)", borderRadius:10, padding:"12px 20px", minWidth:130 }}>
+              <div style={{ fontSize:11, color:"rgba(255,255,255,0.55)", textTransform:"uppercase", letterSpacing:1 }}>{icon} {label}</div>
+              <div style={{ fontSize:30, fontWeight:800, marginTop:4, color:"#FF5A00" }}>{val}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div style={{ display:"flex", borderBottom:"2px solid #e2e8f0", background:"#fff", padding:"0 32px", overflowX:"auto" }}>
+        {TABS.map(([key,label])=>(
+          <button key={key} onClick={()=>setTab(key)} style={{
+            border:"none", background:"none", padding:"14px 18px", fontSize:13, fontWeight:600, cursor:"pointer", whiteSpace:"nowrap",
+            color:tab===key?"#FF5A00":"#64748b",
+            borderBottom:tab===key?"2px solid #FF5A00":"2px solid transparent",
+            marginBottom:-2,
+          }}>{label}</button>
+        ))}
+      </div>
+
+      <div style={{ padding:"24px 32px" }}>
+
+        {/* ── TAB 1: ALL TICKETS ── */}
+        {tab==="tickets" && (
+          <>
+            <div style={{ display:"flex", gap:10, marginBottom:18, flexWrap:"wrap", alignItems:"center" }}>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search ticket or summary..."
+                style={{ padding:"8px 14px", borderRadius:8, border:"1px solid #cbd5e1", fontSize:13, width:260, outline:"none" }} />
+              <select value={aFilter} onChange={e=>setAFilter(e.target.value)}
+                style={{ padding:"8px 12px", borderRadius:8, border:"1px solid #cbd5e1", fontSize:13 }}>
+                {assignees.map(a=><option key={a}>{a}</option>)}
+              </select>
+              <select value={sFilter} onChange={e=>setSFilter(e.target.value)}
+                style={{ padding:"8px 12px", borderRadius:8, border:"1px solid #cbd5e1", fontSize:13 }}>
+                {statuses.map(s=><option key={s}>{s}</option>)}
+              </select>
+              <span style={{ fontSize:12, color:"#64748b" }}>{filtered.length} tickets</span>
+            </div>
+            <div style={{ background:"#fff", borderRadius:12, border:"1px solid #e2e8f0", overflow:"auto" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                <thead>
+                  <tr style={{ background:"#1A1A1A", color:"#fff" }}>
+                    {["Ticket","Summary","Assignee","Type","Priority","Status","Created"].map(h=>(
+                      <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:0.8, whiteSpace:"nowrap" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((i,idx)=>(
+                    <tr key={i.key}
+                      style={{ background:idx%2===0?"#fff":"#f8fafc", borderBottom:"1px solid #f1f5f9" }}
+                      onMouseEnter={e=>e.currentTarget.style.background="#fff7f0"}
+                      onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"#fff":"#f8fafc"}>
+                      <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>
+                        <a href={"https://capillarytech.atlassian.net/browse/"+i.key} target="_blank" rel="noreferrer"
+                          style={{ color:"#FF5A00", fontWeight:700, fontSize:12, textDecoration:"none" }}>{i.key}</a>
+                      </td>
+                      <td style={{ padding:"10px 14px", maxWidth:340, color:"#1e293b", lineHeight:1.4 }}>{i.summary}</td>
+                      <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>
+                        {i.assignee==="Unassigned"
+                          ? <span style={{ color:"#94a3b8", fontStyle:"italic" }}>Unassigned</span>
+                          : <span style={{ background:"#fff3ee", color:"#FF5A00", padding:"2px 9px", borderRadius:12, fontSize:11, fontWeight:600 }}>{i.assignee}</span>}
+                      </td>
+                      <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>{TYPE_ICON[i.type]||"📌"} {i.type}</td>
+                      <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>
+                        <span style={{ display:"inline-block", width:8, height:8, borderRadius:"50%", background:PRIO_CLR[i.priority]||"#9ca3af", marginRight:5 }}/>
+                        {i.priority}
+                      </td>
+                      <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}><StatusBadge s={i.status}/></td>
+                      <td style={{ padding:"10px 14px", whiteSpace:"nowrap", color:"#64748b" }}>{i.created}</td>
+                    </tr>
+                  ))}
+                  {filtered.length===0 && <tr><td colSpan={7} style={{ textAlign:"center", padding:40, color:"#94a3b8" }}>No tickets found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* ── TAB 2: DEV DONE & MERGE REVIEW ── */}
+        {tab==="devdone" && (
+          <div>
+            <div style={{ background:"#fff3ee", border:"1px solid #ffcba4", borderRadius:10, padding:"14px 18px", marginBottom:20, fontSize:13, color:"#92400e" }}>
+              <strong>🔀 {devDoneCnt} tickets in Dev Done</strong> — These are ready to be merged and reviewed. Below is the breakdown per team member.
+            </div>
+            {devDone.length===0
+              ? <p style={{ color:"#94a3b8" }}>No tickets currently in Dev Done.</p>
+              : devDone.map(([assignee, tickets])=>(
+                <div key={assignee} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:12, padding:20, marginBottom:16 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                      <div style={{ width:38, height:38, borderRadius:"50%", background:"linear-gradient(135deg,#FF5A00,#1A1A1A)", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:800 }}>
+                        {assignee.split(" ").map(n=>n[0]).join("").slice(0,2).toUpperCase()}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>{assignee}</div>
+                        <div style={{ fontSize:12, color:"#64748b" }}>{tickets.length} ticket{tickets.length!==1?"s":""} in Dev Done</div>
+                      </div>
+                    </div>
+                    <div style={{ background:"#ede9fe", color:"#7c3aed", padding:"4px 14px", borderRadius:20, fontSize:12, fontWeight:700 }}>
+                      Needs Merge &amp; Review
+                    </div>
+                  </div>
+                  <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                    <thead>
+                      <tr style={{ background:"#f8fafc" }}>
+                        {["Ticket","Summary","Priority","Age"].map(h=>(
+                          <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:11, fontWeight:700, textTransform:"uppercase", color:"#64748b", borderBottom:"1px solid #e2e8f0" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tickets.map(t=>{
+                        const days = daysDiff(t.created, TODAY);
+                        const ab = ageBadge(days);
+                        return (
+                          <tr key={t.key} style={{ borderBottom:"1px solid #f1f5f9" }}>
+                            <td style={{ padding:"9px 12px" }}>
+                              <a href={"https://capillarytech.atlassian.net/browse/"+t.key} target="_blank" rel="noreferrer"
+                                style={{ color:"#FF5A00", fontWeight:700, fontSize:12, textDecoration:"none" }}>{t.key}</a>
+                            </td>
+                            <td style={{ padding:"9px 12px", color:"#1e293b" }}>{t.summary}</td>
+                            <td style={{ padding:"9px 12px" }}>
+                              <span style={{ display:"inline-block", width:8, height:8, borderRadius:"50%", background:PRIO_CLR[t.priority]||"#9ca3af", marginRight:4 }}/>
+                              {t.priority}
+                            </td>
+                            <td style={{ padding:"9px 12px" }}>
+                              <span style={{ background:ab.bg, color:ab.c, padding:"2px 9px", borderRadius:10, fontSize:11, fontWeight:700 }}>{days}d</span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ))
+            }
+          </div>
+        )}
+
+        {/* ── TAB 3: QA STATUS ── */}
+        {tab==="qa" && (
+          <div>
+            <div style={{ background:"#fce7f3", border:"1px solid #f9a8d4", borderRadius:10, padding:"14px 18px", marginBottom:20, fontSize:13, color:"#831843" }}>
+              <strong>🧪 QA Team:</strong> Rashmi BR and Marcy Clothier are the QA members for this sprint. Below shows their current In QA workload.
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+              {QA_TEAM.map(qa => {
+                const tickets = qaTickets[qa] || [];
+                const allTickets = ISSUES.filter(i=>i.assignee===qa);
+                const statCounts = {};
+                allTickets.forEach(i=>{ statCounts[i.status]=(statCounts[i.status]||0)+1; });
+                return (
+                  <div key={qa} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:12, padding:20 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                      <div style={{ width:44, height:44, borderRadius:"50%", background:"linear-gradient(135deg,#ec4899,#FF5A00)", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, fontWeight:800 }}>
+                        {qa.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight:800, fontSize:16, color:"#1e293b" }}>{qa}</div>
+                        <div style={{ fontSize:12, color:"#64748b" }}>QA Engineer &middot; {allTickets.length} total tickets</div>
+                      </div>
+                    </div>
+                    {/* Status summary */}
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:16 }}>
+                      {Object.entries(statCounts).sort((a,b)=>b[1]-a[1]).map(([s,cnt])=>{
+                        const cfg = STATUS_CFG[s]||{c:"#6b7280",bg:"#f3f4f6"};
+                        return <span key={s} style={{ background:cfg.bg, color:cfg.c, padding:"2px 9px", borderRadius:10, fontSize:11, fontWeight:600 }}>{s} ({cnt})</span>;
+                      })}
+                    </div>
+                    {/* In QA tickets */}
+                    <div style={{ borderTop:"1px solid #f1f5f9", paddingTop:14 }}>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#ec4899", marginBottom:10 }}>
+                        🧪 Currently In QA: {tickets.length} ticket{tickets.length!==1?"s":""}
+                      </div>
+                      {tickets.length===0
+                        ? <p style={{ fontSize:13, color:"#94a3b8" }}>No tickets currently In QA.</p>
+                        : tickets.map(t=>(
+                          <div key={t.key} style={{ background:"#fce7f3", borderRadius:8, padding:"10px 14px", marginBottom:8 }}>
+                            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                              <a href={"https://capillarytech.atlassian.net/browse/"+t.key} target="_blank" rel="noreferrer"
+                                style={{ color:"#FF5A00", fontWeight:700, fontSize:12, textDecoration:"none" }}>{t.key}</a>
+                              <span style={{ fontSize:11, color:"#9f1239" }}>created {t.created}</span>
+                            </div>
+                            <div style={{ fontSize:12, color:"#1e293b", marginTop:4 }}>{t.summary}</div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 4: TICKET AGE ── */}
+        {tab==="age" && (
+          <div>
+            <div style={{ background:"#e0f2fe", border:"1px solid #7dd3fc", borderRadius:10, padding:"14px 18px", marginBottom:20, fontSize:13, color:"#0c4a6e" }}>
+              <strong>⏱ Age = days since ticket was created until today (Apr 9, 2026).</strong> &nbsp;
+              <span style={{ background:"#d1fae5", color:"#065f46", padding:"1px 8px", borderRadius:8, fontSize:11, fontWeight:700, marginRight:6 }}>0-14d</span>
+              <span style={{ background:"#fef3c7", color:"#92400e", padding:"1px 8px", borderRadius:8, fontSize:11, fontWeight:700, marginRight:6 }}>15-30d</span>
+              <span style={{ background:"#fee2e2", color:"#991b1b", padding:"1px 8px", borderRadius:8, fontSize:11, fontWeight:700 }}>30d+</span>
+            </div>
+            <div style={{ background:"#fff", borderRadius:12, border:"1px solid #e2e8f0", overflow:"auto" }}>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                <thead>
+                  <tr style={{ background:"#1A1A1A", color:"#fff" }}>
+                    {["Ticket","Summary","Assignee","Status","Created","Age"].map(h=>(
+                      <th key={h} style={{ padding:"11px 14px", textAlign:"left", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:0.8, whiteSpace:"nowrap" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...ISSUES].sort((a,b)=>daysDiff(b.created,TODAY)-daysDiff(a.created,TODAY)).map((i,idx)=>{
+                    const days = daysDiff(i.created, TODAY);
+                    const ab = ageBadge(days);
+                    return (
+                      <tr key={i.key}
+                        style={{ background:idx%2===0?"#fff":"#f8fafc", borderBottom:"1px solid #f1f5f9" }}
+                        onMouseEnter={e=>e.currentTarget.style.background="#eff6ff"}
+                        onMouseLeave={e=>e.currentTarget.style.background=idx%2===0?"#fff":"#f8fafc"}>
+                        <td style={{ padding:"10px 14px" }}>
+                          <a href={"https://capillarytech.atlassian.net/browse/"+i.key} target="_blank" rel="noreferrer"
+                            style={{ color:"#FF5A00", fontWeight:700, fontSize:12, textDecoration:"none" }}>{i.key}</a>
+                        </td>
+                        <td style={{ padding:"10px 14px", maxWidth:320, color:"#1e293b" }}>{i.summary}</td>
+                        <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>
+                          {i.assignee==="Unassigned"
+                            ? <span style={{ color:"#94a3b8", fontStyle:"italic" }}>Unassigned</span>
+                            : <span style={{ background:"#fff3ee", color:"#FF5A00", padding:"2px 8px", borderRadius:10, fontSize:11, fontWeight:600 }}>{i.assignee}</span>}
+                        </td>
+                        <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}><StatusBadge s={i.status}/></td>
+                        <td style={{ padding:"10px 14px", whiteSpace:"nowrap", color:"#64748b" }}>{i.created}</td>
+                        <td style={{ padding:"10px 14px", whiteSpace:"nowrap" }}>
+                          <span style={{ background:ab.bg, color:ab.c, padding:"3px 12px", borderRadius:10, fontSize:12, fontWeight:700 }}>{days} days</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
